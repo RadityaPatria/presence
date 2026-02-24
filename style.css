@@ -1,0 +1,168 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f4f7f6;
+  color: #333;
+}
+
+header {
+  background-color: #0056b3;
+  color: white;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header p {
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+.container {
+  display: flex;
+  max-width: 1200px;
+  margin: 2rem auto;
+  gap: 2rem;
+  padding: 0 1rem;
+}
+
+.qr-section, .list-section {
+  flex: 1;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  height: 100%;
+}
+
+.card h2 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.qr-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.timer {
+  text-align: center;
+  font-weight: bold;
+  color: #e74c3c;
+  font-size: 1.1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #7f8c8d;
+}
+
+.tab.active {
+  color: #0056b3;
+  border-bottom: 3px solid #0056b3;
+  padding-bottom: 0.4rem;
+}
+
+.badge {
+  display: inline-block;
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.badge.success {
+  background-color: #2ecc71;
+}
+
+.student-list {
+  list-style: none;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-id {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.student-name {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+}

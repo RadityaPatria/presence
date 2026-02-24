@@ -12,8 +12,6 @@ function doPost(e) {
   return jsonResponse(false, null, "endpoint_not_found");
 }
 
-// perubahan ada disini
-
 function doGet(e) {
   const path = e.parameter.path || "";
 
@@ -47,7 +45,7 @@ function generateQR(body) {
     session_id,
     course_id,
     expires_at,
-    now.toISOString()
+    timestamp || now.toISOString()
   ]);
 
   return jsonResponse(true, {
@@ -64,17 +62,17 @@ function checkIn(body) {
   if (!user_id || !device_id || !course_id || !session_id || !qr_token || !timestamp)
     return jsonResponse(false, null, "missing_field");
 
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const tokenSheet = ss.getSheetByName(TOKENS_SHEET);
-  const presenceSheet = ss.getSheetByName(PRESENCE_SHEET);
+  const ss = SpreadsheetApp.openById(spreadsheet_id);
+  const tokenSheet = ss.getSheetByName(tokens);
+  const presenceSheet = ss.getSheetByName(presence);
 
-  const tokens = tokenSheet.getDataRange().getValues();
+  const tokensData = tokenSheet.getDataRange().getValues();
 
   let tokenData = null;
 
-  for (let i = 1; i < tokens.length; i++) {
-    if (tokens[i][0] === qr_token) {
-      tokenData = tokens[i];
+  for (let i = 1; i < tokensData.length; i++) {
+    if (tokensData[i][0] === qr_token) {
+      tokenData = tokensData[i];
       break;
     }
   }
@@ -91,7 +89,6 @@ function checkIn(body) {
   if (tokenData[2] !== course_id || tokenData[1] !== session_id)
     return jsonResponse(false, null, "token_mismatch");
 
-  // Anti double check-in
   const presences = presenceSheet.getDataRange().getValues();
 
   for (let i = 1; i < presences.length; i++) {
@@ -113,7 +110,7 @@ function checkIn(body) {
     course_id,
     session_id,
     qr_token,
-    new Date().toISOString()
+    timestamp 
   ]);
 
   return jsonResponse(true, {
@@ -121,7 +118,6 @@ function checkIn(body) {
     status: "checked_in"
   });
 }
-
 
 function checkStatus(params) {
   const { user_id, course_id, session_id } = params;
@@ -155,6 +151,3 @@ function checkStatus(params) {
     status: "not_checked_in"
   });
 }
-
-
-
