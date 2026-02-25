@@ -17,6 +17,12 @@ function doGet(e) {
 
   if (path === "presence/status") return checkStatus(e.parameter);
 
+  if (!path) {
+    return HtmlService
+      .createHtmlOutputFromFile("index")
+      .setTitle("Presence System");
+  }
+
   return jsonResponse(false, null, "endpoint_not_found");
 }
 
