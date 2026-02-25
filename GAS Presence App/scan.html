@@ -55,7 +55,6 @@
       max-width: 440px;
     }
 
-    /* Logo / Branding */
     .branding {
       text-align: center;
       margin-bottom: 1.5rem;
@@ -87,7 +86,6 @@
       margin-top: 0.25rem;
     }
 
-    /* Card */
     .card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
@@ -110,7 +108,6 @@
       }
     }
 
-    /* Form Group */
     .form-group {
       margin-bottom: 1rem;
     }
@@ -125,7 +122,7 @@
       letter-spacing: 0.04em;
     }
 
-    .form-group input {
+    .form-group input[type="text"] {
       width: 100%;
       padding: 0.875rem 1rem;
       border-radius: 12px;
@@ -138,64 +135,107 @@
       outline: none;
     }
 
-    .form-group input::placeholder {
+    .form-group input[type="text"]::placeholder {
       color: var(--gray-400);
     }
 
-    .form-group input:focus {
+    .form-group input[type="text"]:focus {
       border-color: var(--primary-light);
       background: white;
       box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
     }
 
-    /* Button */
-    .btn-scan {
+    /* Buttons */
+    .btn {
       width: 100%;
       padding: 1rem;
       border-radius: 12px;
       border: none;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
       font-weight: 600;
       font-size: 1rem;
       font-family: inherit;
       cursor: pointer;
       transition: all 0.25s ease;
-      margin-top: 0.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
     }
 
-    .btn-scan:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
-    }
-
-    .btn-scan:active {
-      transform: translateY(0);
-    }
-
-    .btn-scan:disabled {
+    .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
 
-    .btn-scan .icon-scan {
-      font-size: 1.2rem;
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      margin-top: 0.5rem;
     }
 
-    /* QR Reader */
-    #reader {
-      margin-top: 1.25rem;
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 2px solid var(--gray-200);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--gray-200);
+    }
+
+    /* Hidden file input */
+    #file-input {
+      display: none;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1rem 0;
+      color: var(--gray-400);
+      font-size: 0.8rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+
+    /* Preview image */
+    .preview-area {
+      margin-top: 1rem;
       display: none;
       border-radius: 14px;
       overflow: hidden;
       border: 3px solid var(--primary-light);
       animation: fadeIn 0.3s ease;
+      text-align: center;
+      background: var(--gray-50);
+      padding: 1rem;
+    }
+
+    .preview-area img {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 8px;
+    }
+
+    .preview-area p {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--gray-500);
     }
 
     @keyframes fadeIn {
@@ -210,7 +250,7 @@
       }
     }
 
-    /* Status Messages */
+    /* Status */
     .status {
       margin-top: 1.25rem;
       padding: 1rem 1.25rem;
@@ -241,25 +281,15 @@
       border: 1px solid rgba(37, 99, 235, 0.15);
     }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 1.25rem 0;
-      color: var(--gray-400);
-      font-size: 0.8rem;
+    /* Manual input section */
+    .manual-section {
+      margin-top: 0.5rem;
     }
 
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--gray-200);
+    .manual-section .form-group {
+      margin-bottom: 0.75rem;
     }
 
-    /* Footer */
     .footer {
       text-align: center;
       margin-top: 1.5rem;
@@ -269,6 +299,7 @@
 
     /* Responsive */
     @media (max-width: 480px) {
+
       body {
         padding: 0.75rem;
         align-items: flex-start;
@@ -283,7 +314,7 @@
         padding: 1.5rem 1.25rem;
       }
 
-      .form-group input {
+      .form-group input[type="text"] {
         padding: 0.75rem 0.875rem;
       }
     }
@@ -300,7 +331,6 @@
       }
     }
 
-    /* Loading spinner */
     .spinner {
       display: inline-block;
       width: 16px;
@@ -310,6 +340,11 @@
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
       margin-right: 6px;
+    }
+
+    .spinner-dark {
+      border-color: rgba(0, 0, 0, 0.15);
+      border-top-color: var(--gray-700);
     }
 
     @keyframes spin {
@@ -331,20 +366,40 @@
     <div class="card">
       <div class="form-group">
         <label>User ID</label>
-        <input id="user_id" placeholder="Masukkan User ID kamu" autocomplete="off" />
+        <input type="text" id="user_id" placeholder="Masukkan User ID kamu" autocomplete="off" />
       </div>
 
       <div class="form-group">
         <label>Device ID</label>
-        <input id="device_id" placeholder="Masukkan Device ID kamu" autocomplete="off" />
+        <input type="text" id="device_id" placeholder="Masukkan Device ID kamu" autocomplete="off" />
       </div>
 
-      <button class="btn-scan" id="btn-scan" onclick="startScan()">
-        <span class="icon-scan">📷</span>
-        Mulai Scan QR
+      <!-- Tombol foto QR (pakai file input + capture, bisa jalan di iframe) -->
+      <button class="btn btn-primary" id="btn-photo" onclick="openCamera()">
+        Ambil Foto QR Code
       </button>
+      <input type="file" id="file-input" accept="image/*" capture="environment" />
 
-      <div id="reader"></div>
+      <!-- Preview foto -->
+      <div class="preview-area" id="preview-area">
+        <img id="preview-img" src="" alt="Preview" />
+        <p>Memproses QR Code...</p>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider">atau masukkan token manual</div>
+
+      <!-- Manual input fallback -->
+      <div class="manual-section">
+        <div class="form-group">
+          <label>Token QR</label>
+          <input type="text" id="manual_token" placeholder="Contoh: TKN-A1B2C3" autocomplete="off" />
+        </div>
+        <button class="btn btn-secondary" id="btn-manual" onclick="manualCheckIn()">
+          ✏️ Kirim Token Manual
+        </button>
+      </div>
+
       <div id="status" class="status"></div>
     </div>
 
@@ -352,39 +407,68 @@
   </div>
 
   <script>
-    const baseUrl =
+    var baseUrl =
       "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
-    let scanner;
-    const btnScan = document.getElementById("btn-scan");
+    var fileInput = document.getElementById("file-input");
+    var btnPhoto = document.getElementById("btn-photo");
+    var btnManual = document.getElementById("btn-manual");
+    var previewArea = document.getElementById("preview-area");
+    var previewImg = document.getElementById("preview-img");
 
-    function startScan() {
+    // Buka kamera via file input (works in iframe / Apps Script)
+    function openCamera() {
+      if (!validate()) {
+        showStatus("Lengkapi User ID dan Device ID terlebih dahulu", "error");
+        return;
+      }
+      fileInput.click();
+    }
+
+    // Ketika user selesai ambil foto
+    fileInput.addEventListener("change", function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      // Tampilkan preview
+      previewArea.style.display = "block";
+      previewImg.src = URL.createObjectURL(file);
+
+      btnPhoto.disabled = true;
+      btnPhoto.innerHTML = '<span class="spinner"></span> Memproses...';
+      showStatus("Membaca QR Code dari foto...", "loading");
+
+      // Decode QR dari file gambar
+      var html5QrCode = new Html5Qrcode("preview-area");
+      html5QrCode.scanFile(file, true)
+        .then(function (decodedText) {
+          showStatus("QR terdeteksi: " + decodedText + " — Mengirim...", "loading");
+          sendCheckIn(decodedText);
+        })
+        .catch(function (err) {
+          showStatus("❌ QR Code tidak terdeteksi di foto. Coba ambil foto lebih jelas atau masukkan token manual.", "error");
+          resetPhotoButton();
+        });
+
+      fileInput.value = "";
+    });
+
+    // Manual token input
+    function manualCheckIn() {
       if (!validate()) {
         showStatus("Lengkapi User ID dan Device ID terlebih dahulu", "error");
         return;
       }
 
-      btnScan.disabled = true;
-      btnScan.innerHTML = '<span class="spinner"></span> Membuka Kamera...';
+      var token = document.getElementById("manual_token").value.trim();
+      if (!token) {
+        showStatus("Masukkan token QR terlebih dahulu", "error");
+        return;
+      }
 
-      document.getElementById("reader").style.display = "block";
-      showStatus("Arahkan kamera ke QR Code...", "loading");
-
-      scanner = new Html5Qrcode("reader");
-
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        async (decodedText) => {
-          await scanner.stop();
-          document.getElementById("reader").style.display = "none";
-          btnScan.innerHTML = '<span class="spinner"></span> Memproses...';
-          sendCheckIn(decodedText);
-        },
-      ).catch(function (err) {
-        showStatus("Tidak dapat mengakses kamera: " + err, "error");
-        resetButton();
-      });
+      btnManual.disabled = true;
+      btnManual.innerHTML = '<span class="spinner spinner-dark"></span> Mengirim...';
+      sendCheckIn(token);
     }
 
     function validate() {
@@ -394,54 +478,61 @@
       );
     }
 
-    function resetButton() {
-      btnScan.disabled = false;
-      btnScan.innerHTML = '<span class="icon-scan">📷</span> Mulai Scan QR';
+    function resetPhotoButton() {
+      btnPhoto.disabled = false;
+      btnPhoto.innerHTML = 'Ambil Foto QR Code';
+      previewArea.style.display = "none";
     }
 
-    async function sendCheckIn(token) {
+    function resetManualButton() {
+      btnManual.disabled = false;
+      btnManual.innerHTML = 'Kirim Token Manual';
+    }
+
+    function sendCheckIn(token) {
       showStatus("Mengirim data presensi...", "loading");
 
-      const data = {
+      var data = {
         user_id: document.getElementById("user_id").value.trim(),
         device_id: document.getElementById("device_id").value.trim(),
         qr_token: token,
         timestamp: new Date().toISOString(),
       };
 
-      try {
-        const res = await fetch(baseUrl + "?path=presence/checkin", {
-          method: "POST",
-          redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(data),
+      fetch(baseUrl + "?path=presence/checkin", {
+        method: "POST",
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (result) {
+          if (result.ok) {
+            showStatus(
+              "✅ Presensi Berhasil!\n" + result.data.course_id + " — Sesi " + result.data.session_id,
+              "success"
+            );
+          } else {
+            var msgs = {
+              token_invalid: "Token QR tidak valid",
+              token_expired: "Token QR sudah kadaluarsa",
+              already_checked_in: "Kamu sudah presensi di sesi ini",
+              missing_field: "Data tidak lengkap",
+            };
+            showStatus("❌ " + (msgs[result.error] || result.error), "error");
+          }
+          resetPhotoButton();
+          resetManualButton();
+        })
+        .catch(function (e) {
+          showStatus("Tidak dapat menghubungi server. Coba lagi.", "error");
+          resetPhotoButton();
+          resetManualButton();
         });
-
-        const result = await res.json();
-
-        if (result.ok) {
-          showStatus(
-            "✅ Presensi Berhasil!\n" + result.data.course_id + " — Sesi " + result.data.session_id,
-            "success"
-          );
-        } else {
-          const msgs = {
-            token_invalid: "Token QR tidak valid",
-            token_expired: "Token QR sudah kadaluarsa",
-            already_checked_in: "Kamu sudah presensi di sesi ini",
-            missing_field: "Data tidak lengkap",
-          };
-          showStatus("❌ " + (msgs[result.error] || result.error), "error");
-        }
-      } catch (e) {
-        showStatus("Tidak dapat menghubungi server. Coba lagi.", "error");
-      }
-
-      resetButton();
     }
 
     function showStatus(msg, type) {
-      const el = document.getElementById("status");
+      var el = document.getElementById("status");
       el.innerText = msg;
       el.className = "status " + type;
       el.style.display = "block";
