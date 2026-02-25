@@ -153,7 +153,7 @@
         <label>ID Sesi:</label>
         <input type="text" id="input-session" placeholder="Contoh: SES-01">
 
-        <button class="btn-generate" onclick="startSession()">Terapkan & Generate QR</button>
+        <button class="btn-generate" id="btn-start">Terapkan & Generate QR</button>
       </div>
 
       <div id="qr-display-area">
@@ -170,79 +170,76 @@
   </main>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+    document.addEventListener('DOMContentLoaded', function () {
+      const qrImage = document.getElementById('qr-image');
+      const timeLeftSpan = document.getElementById('time-left');
+      const qrDisplayArea = document.getElementById('qr-display-area');
+      const btnStart = document.getElementById('btn-start');
 
-    const qrImage = document.getElementById('qr-image');
-    const timeLeftSpan = document.getElementById('time-left');
-    const qrDisplayArea = document.getElementById('qr-display-area');
+      let qrInterval;
 
-    let qrInterval;
+      btnStart.addEventListener('click', startSession);
 
-    function startSession() {
-      const courseId = document.getElementById('input-course').value.trim();
-      const sessionId = document.getElementById('input-session').value.trim();
+      function startSession() {
+        const courseId = document.getElementById('input-course').value.trim();
+        const sessionId = document.getElementById('input-session').value.trim();
 
-      // Validasi agar input tidak kosong
-      if (!courseId || !sessionId) {
-        alert("Harap isi ID Mata Kuliah dan ID Sesi terlebih dahulu!");
-        return;
-      }
-
-      qrDisplayArea.style.display = 'block';
-      qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
-      generateQR();
-    }
-
-    // Fungsi Generate Token & Tampilkan QR Code dari Server
-    async function generateQR() {
-      const currentCourseId = document.getElementById('input-course').value.trim();
-      const currentSessionId = document.getElementById('input-session').value.trim();
-
-      try {
-        const fetchUrl = `${API_URL}?path=presence/qr/generate`;
-
-        const response = await fetch(fetchUrl, {
-          method: "POST",
-          redirect: "follow",
-          body: JSON.stringify({
-            course_id: currentCourseId,
-            session_id: currentSessionId,
-            timestamp: new Date().toISOString()
-          }),
-          headers: { "Content-Type": "text/plain;charset=utf-8" }
-        });
-
-        const result = await response.json();
-
-        if (result.ok) {
-          const token = result.data.qr_token;
-          qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${token}`;
-          startTimer(30);
-        } else {
-          console.error("Server merespons dengan error:", result.error);
+        if (!courseId || !sessionId) {
+          alert("Harap isi ID Mata Kuliah dan ID Sesi terlebih dahulu!");
+          return;
         }
-      } catch (error) {
-        console.error("Gagal generate QR:", error);
+
+        qrDisplayArea.style.display = 'block';
+        qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
+        btnStart.disabled = true;
+        btnStart.innerText = "Generating...";
+        generateQR();
       }
-    }
 
-    // Fungsi Hitung Mundur (Timer)
-    function startTimer(seconds) {
-      clearInterval(qrInterval);
-      let timeLeft = seconds;
-      timeLeftSpan.innerText = timeLeft;
+      function generateQR() {
+        const currentCourseId = document.getElementById('input-course').value.trim();
+        const currentSessionId = document.getElementById('input-session').value.trim();
 
-      qrInterval = setInterval(() => {
-        timeLeft--;
+        google.script.run
+          .withSuccessHandler(function (result) {
+            btnStart.disabled = false;
+            btnStart.innerText = "Terapkan & Generate QR";
+
+            if (result.ok) {
+              const token = result.data.qr_token;
+              qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + token;
+              startTimer(30);
+            } else {
+              console.error("Server merespons dengan error:", result.error);
+              alert("Error: " + result.error);
+            }
+          })
+          .withFailureHandler(function (error) {
+            btnStart.disabled = false;
+            btnStart.innerText = "Terapkan & Generate QR";
+            console.error("Gagal generate QR:", error);
+            alert("Gagal generate QR: " + error.message);
+          })
+          .generateQRFromClient(currentCourseId, currentSessionId);
+      }
+
+      // Fungsi Hitung Mundur (Timer)
+      function startTimer(seconds) {
+        clearInterval(qrInterval);
+        let timeLeft = seconds;
         timeLeftSpan.innerText = timeLeft;
 
-        if (timeLeft <= 0) {
-          clearInterval(qrInterval);
-          // Otomatis generate QR baru saat waktu habis
-          generateQR();
-        }
-      }, 1000);
-    }
+        qrInterval = setInterval(function () {
+          timeLeft--;
+          timeLeftSpan.innerText = timeLeft;
+
+          if (timeLeft <= 0) {
+            clearInterval(qrInterval);
+            generateQR();
+          }
+        }, 1000);
+      }
+    }); // end DOMContentLoaded
   </script>
 </body>
 
