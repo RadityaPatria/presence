@@ -37,7 +37,7 @@ function generateQR(body) {
   const qrToken = "TKN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const now = new Date();
-  const expires_at = new Date(now.getTime() + 30000).toISOString(); // 30 detik
+  const expires_at = new Date(now.getTime() + 30000).toISOString();
   const sheet = SpreadsheetApp.openById(spreadsheet_id).getSheetByName(tokens);
 
   sheet.appendRow([
@@ -54,6 +54,34 @@ function generateQR(body) {
     course_id: course_id,
     expires_at: expires_at
   });
+}
+
+function generateQRFromClient(courseId, sessionId) {
+  if (!courseId || !sessionId)
+    return { ok: false, error: "missing_field" };
+
+  const qrToken = "TKN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const now = new Date();
+  const expires_at = new Date(now.getTime() + 30000).toISOString();
+  const sheet = SpreadsheetApp.openById(spreadsheet_id).getSheetByName(tokens);
+
+  sheet.appendRow([
+    qrToken,
+    sessionId,
+    courseId,
+    expires_at,
+    now.toISOString()
+  ]);
+
+  return {
+    ok: true,
+    data: {
+      qr_token: qrToken,
+      session_id: sessionId,
+      course_id: courseId,
+      expires_at: expires_at
+    }
+  };
 }
 
 function checkIn(body) {
@@ -110,7 +138,7 @@ function checkIn(body) {
     course_id,
     session_id,
     qr_token,
-    timestamp 
+    timestamp
   ]);
 
   return jsonResponse(true, {
