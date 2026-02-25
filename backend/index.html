@@ -1,11 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Presensi - Cloud Computing</title>
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7f6;
+      color: #333;
+    }
+
+    header {
+      background-color: #0056b3;
+      color: white;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      opacity: 0.8;
+    }
+
+    /* Mengubah container agar berada di tengah (karena list dihapus) */
+    .container {
+      max-width: 600px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      margin-bottom: 1rem;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .input-section {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-section label {
+      display: block;
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .input-section input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 12px;
+      background: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+
+    .btn-generate:hover {
+      background: #004494;
+    }
+
+    .subtitle {
+      color: #7f8c8d;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      background-color: #f8f9fa;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .qr-container img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .timer {
+      text-align: center;
+      font-weight: bold;
+      color: #e74c3c;
+      font-size: 1.2rem;
+    }
+
+    /* Area QR disembunyikan secara default */
+    #qr-display-area {
+      display: none;
+      margin-top: 2rem;
+      border-top: 2px solid #eee;
+      padding-top: 1.5rem;
+    }
+  </style>
 </head>
+
 <body>
   <header>
     <h1>Dashboard Presensi Mahasiswa</h1>
@@ -13,45 +142,115 @@
   </header>
 
   <main class="container">
-    <section class="qr-section">
-      <div class="card">
-        <h2>Scan QR Code</h2>
-        
-        <div style="margin-bottom: 1.5rem; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-          <label style="display: block; font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold;">ID Mata Kuliah:</label>
-          <input type="text" id="input-course" value="CC-101" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-          
-          <label style="display: block; font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold;">ID Sesi:</label>
-          <input type="text" id="input-session" value="SES-01" style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-          
-          <button onclick="generateQR()" style="width: 100%; padding: 10px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-            Terapkan & Generate Sesi Baru
-          </button>
-        </div>
+    <div class="card">
+      <h2>Mulai Sesi Presensi</h2>
+
+      <div class="input-section">
+        <label>ID Mata Kuliah:</label>
+        <input type="text" id="input-course" placeholder="Contoh: CC-101">
+
+        <label>ID Sesi:</label>
+        <input type="text" id="input-session" placeholder="Contoh: SES-01">
+
+        <button class="btn-generate" onclick="startSession()">Terapkan & Generate QR</button>
+      </div>
+
+      <div id="qr-display-area">
         <p class="subtitle">Buka aplikasi presensi Anda dan scan QR di bawah ini.</p>
+
         <div class="qr-container">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ContohToken123" alt="QR Code Presensi" id="qr-image">
+          <img src="" alt="QR Code Presensi" id="qr-image">
         </div>
+
         <p class="timer">Berlaku selama: <span id="time-left">30</span> detik</p>
       </div>
-    </section>
 
-    <section class="list-section">
-      <div class="card">
-        <div class="tabs">
-          <h2 class="tab active">Belum Absen <span class="badge" id="count-belum">3</span></h2>
-          <h2 class="tab">Sudah Absen <span class="badge success" id="count-sudah">2</span></h2>
-        </div>
-
-        <ul class="student-list" id="list-belum">
-          </ul>
-
-        <ul class="student-list" id="list-sudah">
-          </ul>
-      </div>
-    </section>
+    </div>
   </main>
-  
-  <script src="script.js"></script>
+
+  <script>
+    // URL Web App Google Apps Script Anda
+    const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+
+    // Ambil elemen dari DOM
+    const qrImage = document.getElementById('qr-image');
+    const timeLeftSpan = document.getElementById('time-left');
+    const qrDisplayArea = document.getElementById('qr-display-area');
+
+    let qrInterval;
+
+    // Fungsi untuk memulai sesi dan memunculkan area QR
+    function startSession() {
+      const courseId = document.getElementById('input-course').value.trim();
+      const sessionId = document.getElementById('input-session').value.trim();
+
+      // Validasi agar input tidak kosong
+      if (!courseId || !sessionId) {
+        alert("Harap isi ID Mata Kuliah dan ID Sesi terlebih dahulu!");
+        return;
+      }
+
+      // Tampilkan area QR Code
+      qrDisplayArea.style.display = 'block';
+
+      // Berikan gambar loading sementara sambil menunggu balasan API
+      qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
+
+      // Panggil fungsi untuk generate dari server
+      generateQR();
+    }
+
+    // Fungsi Generate Token & Tampilkan QR Code dari Server
+    async function generateQR() {
+      const currentCourseId = document.getElementById('input-course').value.trim();
+      const currentSessionId = document.getElementById('input-session').value.trim();
+
+      try {
+        const fetchUrl = `${API_URL}?path=presence/qr/generate`;
+
+        const response = await fetch(fetchUrl, {
+          method: "POST",
+          redirect: "follow",
+          body: JSON.stringify({
+            course_id: currentCourseId,
+            session_id: currentSessionId,
+            timestamp: new Date().toISOString()
+          }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+
+        const result = await response.json();
+
+        if (result.ok) {
+          const token = result.data.qr_token;
+          qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${token}`;
+          startTimer(30);
+        } else {
+          console.error("Server merespons dengan error:", result.error);
+        }
+      } catch (error) {
+        console.error("Gagal generate QR:", error);
+      }
+    }
+
+    // Fungsi Hitung Mundur (Timer)
+    function startTimer(seconds) {
+      clearInterval(qrInterval);
+      let timeLeft = seconds;
+      timeLeftSpan.innerText = timeLeft;
+
+      qrInterval = setInterval(() => {
+        timeLeft--;
+        timeLeftSpan.innerText = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(qrInterval);
+          // Otomatis generate QR baru saat waktu habis
+          generateQR();
+        }
+      }, 1000);
+    }
+  </script>
 </body>
+
 </html>
