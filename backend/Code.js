@@ -116,7 +116,7 @@ function checkIn(body) {
     course_id,
     session_id,
     qr_token,
-    timestamp 
+    timestamp
   ]);
 
   return jsonResponse(true, {

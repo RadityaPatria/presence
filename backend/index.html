@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Dashboard Presensi - Cloud Computing</title>
 
   <style>
@@ -169,17 +170,14 @@
   </main>
 
   <script>
-    // URL Web App Google Apps Script Anda
     const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
-    // Ambil elemen dari DOM
     const qrImage = document.getElementById('qr-image');
     const timeLeftSpan = document.getElementById('time-left');
     const qrDisplayArea = document.getElementById('qr-display-area');
 
     let qrInterval;
 
-    // Fungsi untuk memulai sesi dan memunculkan area QR
     function startSession() {
       const courseId = document.getElementById('input-course').value.trim();
       const sessionId = document.getElementById('input-session').value.trim();
@@ -190,13 +188,8 @@
         return;
       }
 
-      // Tampilkan area QR Code
       qrDisplayArea.style.display = 'block';
-
-      // Berikan gambar loading sementara sambil menunggu balasan API
       qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
-
-      // Panggil fungsi untuk generate dari server
       generateQR();
     }
 
@@ -252,5 +245,6 @@
     }
   </script>
 </body>
+
 
 </html>
