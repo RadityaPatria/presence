@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Presence QR API
+  version: 1.0.0
+
+servers:
+  - url: https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g
+
+paths:
+
+  /webqr:
+    get:
+      summary: Get Web QR
+      responses:
+        "200":
+          description: Success
+
+  /page/scan:
+    get:
+      summary: Get Page Scan
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: string
+            example: scan
+      responses:
+        "200":
+          description: Success
+
+  /presence/checkin:
+    post:
+      summary: Check In Presence
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+            example: presence/checkin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Success
+
+  /presence/qr/generate:
+    post:
+      summary: Generate QR Token
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+            example: presence/qr/generate
+      responses:
+        "200":
+          description: Success
+
+  /presence/status:
+    get:
+      summary: Check Status Presence
+      parameters:
+        - name: path
+          in: query
+          schema:
+            type: string
+            example: presence/status
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          schema:
+            type: string
+        - name: session_id
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success

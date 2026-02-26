@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Attendance Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-dark: #3730a3;
+      --success: #059669;
+      --success-bg: #d1fae5;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --info: #2563eb;
+      --info-bg: #dbeafe;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-700: #334155;
+      --gray-900: #0f172a;
+      --radius: 16px;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* Logo / Branding */
+    .branding {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+
+    .branding .icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .branding h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .branding p {
+      font-size: 0.875rem;
+      opacity: 0.85;
+      margin-top: 0.25rem;
+    }
+
+    /* Card */
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Form Group */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.375rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      border: 2px solid var(--gray-200);
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--gray-900);
+      background: var(--gray-50);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-group input::placeholder {
+      color: var(--gray-400);
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Button */
+    .btn-scan {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-scan:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-scan:active {
+      transform: translateY(0);
+    }
+
+    .btn-scan:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-scan .icon-scan {
+      font-size: 1.2rem;
+    }
+
+    /* QR Reader */
+    #reader {
+      margin-top: 1.25rem;
+      display: none;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 3px solid var(--primary-light);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Status Messages */
+    .status {
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      display: none;
+      animation: fadeIn 0.3s ease;
+      line-height: 1.5;
+    }
+
+    .success {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid rgba(5, 150, 105, 0.15);
+    }
+
+    .error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(220, 38, 38, 0.15);
+    }
+
+    .loading {
+      background: var(--info-bg);
+      color: var(--info);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+      color: var(--gray-400);
+      font-size: 0.8rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 0.75rem;
+        align-items: flex-start;
+        padding-top: 2rem;
+      }
+
+      .branding h1 {
+        font-size: 1.3rem;
+      }
+
+      .card {
+        padding: 1.5rem 1.25rem;
+      }
+
+      .form-group input {
+        padding: 0.75rem 0.875rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      html {
+        font-size: 14px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 2.5rem 2rem;
+      }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="branding">
+      <div class="icon">📋</div>
+      <h1>QR Attendance</h1>
+      <p>Scan QR Code untuk presensi</p>
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label>User ID</label>
+        <input id="user_id" placeholder="Masukkan User ID kamu" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label>Device ID</label>
+        <input id="device_id" placeholder="Masukkan Device ID kamu" autocomplete="off" />
+      </div>
+
+      <button class="btn-scan" id="btn-scan" onclick="startScan()">
+        <span class="icon-scan">📷</span>
+        Mulai Scan QR
+      </button>
+
+      <div id="reader"></div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <p class="footer">Cloud Computing &mdash; Presence System</p>
+  </div>
+
+  <script>
+    const baseUrl =
+      "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+
+    let scanner;
+    const btnScan = document.getElementById("btn-scan");
+
+    function startScan() {
+      if (!validate()) {
+        showStatus("Lengkapi User ID dan Device ID terlebih dahulu", "error");
+        return;
+      }
+
+      btnScan.disabled = true;
+      btnScan.innerHTML = '<span class="spinner"></span> Membuka Kamera...';
+
+      document.getElementById("reader").style.display = "block";
+      showStatus("Arahkan kamera ke QR Code...", "loading");
+
+      scanner = new Html5Qrcode("reader");
+
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText) => {
+          await scanner.stop();
+          document.getElementById("reader").style.display = "none";
+          btnScan.innerHTML = '<span class="spinner"></span> Memproses...';
+          sendCheckIn(decodedText);
+        },
+      ).catch(function (err) {
+        showStatus("Tidak dapat mengakses kamera: " + err, "error");
+        resetButton();
+      });
+    }
+
+    function validate() {
+      return (
+        document.getElementById("user_id").value.trim() &&
+        document.getElementById("device_id").value.trim()
+      );
+    }
+
+    function resetButton() {
+      btnScan.disabled = false;
+      btnScan.innerHTML = '<span class="icon-scan">📷</span> Mulai Scan QR';
+    }
+
+    async function sendCheckIn(token) {
+      showStatus("Mengirim data presensi...", "loading");
+
+      const data = {
+        user_id: document.getElementById("user_id").value.trim(),
+        device_id: document.getElementById("device_id").value.trim(),
+        qr_token: token,
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        const res = await fetch(baseUrl + "?path=presence/checkin", {
+          method: "POST",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (result.ok) {
+          showStatus(
+            "✅ Presensi Berhasil!\n" + result.data.course_id + " — Sesi " + result.data.session_id,
+            "success"
+          );
+        } else {
+          const msgs = {
+            token_invalid: "Token QR tidak valid",
+            token_expired: "Token QR sudah kadaluarsa",
+            already_checked_in: "Kamu sudah presensi di sesi ini",
+            missing_field: "Data tidak lengkap",
+          };
+          showStatus("❌ " + (msgs[result.error] || result.error), "error");
+        }
+      } catch (e) {
+        showStatus("Tidak dapat menghubungi server. Coba lagi.", "error");
+      }
+
+      resetButton();
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById("status");
+      el.innerText = msg;
+      el.className = "status " + type;
+      el.style.display = "block";
+    }
+  </script>
+</body>
+
+</html>

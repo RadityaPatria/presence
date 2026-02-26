@@ -14,9 +14,25 @@ function doPost(e) {
 
 function doGet(e) {
   const path = e.parameter.path || "";
+  const page = e.parameter.page || "";
 
   if (path === "presence/status") return checkStatus(e.parameter);
 
+
+  // Routing halaman: ?page=scan untuk client scanner
+  if (page === "scan") {
+    return HtmlService
+      .createHtmlOutputFromFile("scan")
+      .setTitle("QR Attendance Scanner")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
+  // Default: dashboard admin
+  if (!path) {
+    return HtmlService
+      .createHtmlOutputFromFile("index")
+      .setTitle("Presence System");
+  }
   return jsonResponse(false, null, "endpoint_not_found");
 }
 
@@ -85,9 +101,9 @@ function generateQRFromClient(courseId, sessionId) {
 }
 
 function checkIn(body) {
-  const { user_id, device_id, course_id, session_id, qr_token, timestamp } = body;
+  const { user_id, device_id, qr_token, timestamp } = body;
 
-  if (!user_id || !device_id || !course_id || !session_id || !qr_token || !timestamp)
+  if (!user_id || !device_id || !qr_token || !timestamp)
     return jsonResponse(false, null, "missing_field");
 
   const ss = SpreadsheetApp.openById(spreadsheet_id);
@@ -114,8 +130,9 @@ function checkIn(body) {
   if (now > expiresAt)
     return jsonResponse(false, null, "token_expired");
 
-  if (tokenData[2] !== course_id || tokenData[1] !== session_id)
-    return jsonResponse(false, null, "token_mismatch");
+  // Ambil course_id dan session_id dari token
+  const course_id = tokenData[2];
+  const session_id = tokenData[1];
 
   const presences = presenceSheet.getDataRange().getValues();
 
@@ -143,6 +160,8 @@ function checkIn(body) {
 
   return jsonResponse(true, {
     presence_id: presenceId,
+    course_id: course_id,
+    session_id: session_id,
     status: "checked_in"
   });
 }
