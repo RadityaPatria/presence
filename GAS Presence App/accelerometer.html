@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telemetri Sensor HP Asli</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Telemetri Sensor HP</title>
+
     <style>
         :root {
             --primary: #2563eb;
-            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
             --bg: #f8fafc;
         }
 
@@ -53,7 +54,7 @@
         }
 
         .btn-danger {
-            background: #dc2626;
+            background: var(--danger);
             color: white;
             border: none;
             font-weight: bold;
@@ -62,17 +63,16 @@
         }
 
         .btn-warning {
-            background: #f59e0b;
+            background: var(--warning);
             color: white;
             border: none;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 20px;
         }
 
         .data-display {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             text-align: center;
             margin-bottom: 20px;
@@ -92,14 +92,10 @@
         #log {
             background: #eee;
             padding: 10px;
-            height: 100px;
-            overflow-y: scroll;
+            height: 120px;
+            overflow-y: auto;
             font-size: 0.8rem;
             border-radius: 6px;
-        }
-
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -109,123 +105,137 @@
     <div class="container">
         <h2 style="text-align: center;">Telemetri Sensor HP</h2>
 
-
         <div class="card">
             <h3>1. Konfigurasi Device</h3>
-            <input type="text" id="device-id" value="HP-MAHASISWA-01" plac eholder="Masukkan ID Device">
+            <input type="text" id="device-id" placeholder="Masukkan ID Device">
 
-            <button onclick="requestSensorPermission()" class="btn-warning" id="btn-permission">
-                ⚠️ Klik Ini Dulu (Wajib untuk iPhone/iOS)
+            <button onclick="requestSensorPermission()" class="btn-warning">
+                Klik Ini Dulu (Wajib untuk iPhone/iOS)
             </button>
 
             <h3>2. Data Sensor Real-time</h3>
+
             <div class="data-display">
                 <div>
                     <div class="label">Accel X</div>
-                    <div id="val-x" class="data-val">0.0</div>
+                    <div id="val-x" class="data-val">0.00</div>
                 </div>
                 <div>
                     <div class="label">Accel Y</div>
-                    <div id="val-y" class="data-val">0.0</div>
+                    <div id="val-y" class="data-val">0.00</div>
                 </div>
                 <div>
                     <div class="label">Accel Z</div>
-                    <div id="val-z" class="data-val">0.0</div>
+                    <div id="val-z" class="data-val">0.00</div>
                 </div>
             </div>
 
-            <button id="btn-start" class="btn-primary" onclick="toggleSending()">Mulai Kirim Data ke Cloud</button>
-            <button id="btn-stop" class="btn-danger" onclick="toggleSending()">Hentikan Pengiriman</button>
+            <button id="btn-start" class="btn-primary" onclick="toggleSending()">
+                Mulai Kirim Data ke Cloud
+            </button>
+
+            <button id="btn-stop" class="btn-danger" onclick="toggleSending()">
+                Hentikan Pengiriman
+            </button>
 
             <div id="log">Log status...</div>
         </div>
     </div>
 
     <script>
-
         const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
         let currentMotion = { x: 0, y: 0, z: 0 };
         let isSending = false;
         let sendInterval;
 
-        // --- 1. SENSOR HANDLER ---
-        function handleMotion(event) {
-            const acc = event.accelerationIncludingGravity;
-            if (acc) {
-                currentMotion.x = acc.x ? acc.x.toFixed(2) : 0;
-                currentMotion.y = acc.y ? acc.y.toFixed(2) : 0;
-                currentMotion.z = acc.z ? acc.z.toFixed(2) : 0;
-
-                document.getElementById('val-x').textContent = currentMotion.x;
-                document.getElementById('val-y').textContent = currentMotion.y;
-                document.getElementById('val-z').textContent = currentMotion.z;
-            }
-        }
-
-        // --- 2. PERMISSION REQUEST (iOS) ---
-        function requestSensorPermission() {
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            window.addEventListener('devicemotion', handleMotion);
-                            log("Izin sensor diberikan!");
-                        } else {
-                            log("Izin sensor ditolak.");
-                        }
-                    })
-                    .catch(err => log("Error izin: " + err));
-            } else {
-                log("Tidak perlu izin khusus (bukan iOS).");
-            }
-        }
-
-        // --- 3. LOG HELPER ---
         function log(msg) {
             const el = document.getElementById('log');
             el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
         }
 
-        // --- 4. SEND DATA TO GOOGLE SHEET ---
+        function handleMotion(event) {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            currentMotion.x = (acc.x ?? 0).toFixed(2);
+            currentMotion.y = (acc.y ?? 0).toFixed(2);
+            currentMotion.z = (acc.z ?? 0).toFixed(2);
+
+            document.getElementById('val-x').textContent = currentMotion.x;
+            document.getElementById('val-y').textContent = currentMotion.y;
+            document.getElementById('val-z').textContent = currentMotion.z;
+        }
+
+        function requestSensorPermission() {
+            if (location.protocol !== "https:" && location.hostname !== "localhost") {
+                log("iOS butuh HTTPS untuk sensor.");
+                return;
+            }
+
+            if (typeof DeviceMotionEvent !== 'undefined' &&
+                typeof DeviceMotionEvent.requestPermission === 'function') {
+
+                DeviceMotionEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                            log("Izin sensor diberikan.");
+                        } else {
+                            log("Izin sensor ditolak.");
+                        }
+                    })
+                    .catch(err => log("Error izin: " + err));
+
+            } else {
+                window.addEventListener('devicemotion', handleMotion);
+                log("Sensor aktif (Android / non-iOS).");
+            }
+        }
+
         async function sendData() {
             const deviceId = document.getElementById('device-id').value;
 
             const payload = {
                 device_id: deviceId,
                 ts: new Date().toISOString(),
-                samples: [
-                    {
-                        t: new Date().toISOString(),
-                        x: currentMotion.x,
-                        y: currentMotion.y,
-                        z: currentMotion.z
-                    }
-                ]
+                samples: [{
+                    t: new Date().toISOString(),
+                    x: currentMotion.x,
+                    y: currentMotion.y,
+                    z: currentMotion.z
+                }]
             };
 
             try {
                 const response = await fetch(`${API_URL}?path=telemetry/accel`, {
                     method: "POST",
-                    redirect: "follow",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
+                const text = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(text);
+                } catch {
+                    log("Response bukan JSON.");
+                    return;
+                }
 
                 if (result.ok) {
                     log(`Terkirim: X=${currentMotion.x}, Y=${currentMotion.y}, Z=${currentMotion.z}`);
                 } else {
                     log("Gagal: " + result.error);
                 }
+
             } catch (e) {
+                log("Error jaringan / CORS.");
                 console.error(e);
-                log("Error Jaringan (Cek koneksi / Izin Script)");
             }
         }
 
-        // --- 5. TOGGLE SENDING ---
         function toggleSending() {
             const btnStart = document.getElementById('btn-start');
             const btnStop = document.getElementById('btn-stop');
@@ -234,8 +244,8 @@
                 isSending = true;
                 btnStart.style.display = 'none';
                 btnStop.style.display = 'block';
-                sendInterval = setInterval(sendData, 2000);
-                log("Mulai mengirim data sensor asli...");
+                sendInterval = setInterval(sendData, 5000);
+                log("Mulai mengirim data...");
             } else {
                 isSending = false;
                 clearInterval(sendInterval);
@@ -245,13 +255,12 @@
             }
         }
 
-        // --- 6. AUTO-START LISTENER FOR ANDROID ---
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission !== 'function') {
+        // Auto listener untuk Android
+        if (typeof DeviceMotionEvent !== 'undefined' &&
+            typeof DeviceMotionEvent.requestPermission !== 'function') {
             window.addEventListener('devicemotion', handleMotion);
         }
-
     </script>
 
 </body>
-
 </html>
