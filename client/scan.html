@@ -1,223 +1,233 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Attendance</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QR Attendance</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-    <style>
-      :root {
-        --primary: #2563eb;
-        --success: #16a34a;
-        --danger: #dc2626;
-        --gray: #64748b;
-        --bg: #f1f5f9;
-      }
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --gray: #64748b;
+}
 
-      * {
-        box-sizing: border-box;
-      }
+* { box-sizing: border-box; }
 
-      body {
-        margin: 0;
-        font-family: "Inter", "Segoe UI", sans-serif;
-        background: var(--bg);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-      .wrapper {
-        width: 100%;
-        max-width: 420px;
-        padding: 20px;
-      }
+.wrapper {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
 
-      .card {
-        background: white;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-      }
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 25px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+  text-align: center;
+}
 
-      .header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
+.header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
 
-      .header h2 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 20px;
-      }
+.header p {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--gray);
+}
 
-      .header p {
-        margin-top: 6px;
-        font-size: 13px;
-        color: var(--gray);
-      }
+.form-group {
+  text-align: left;
+  margin-top: 18px;
+}
 
-      input {
-        width: 100%;
-        padding: 14px;
-        margin-bottom: 14px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        font-size: 14px;
-        transition: 0.2s;
-      }
+label {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 6px;
+  display: block;
+}
 
-      input:focus {
-        border-color: var(--primary);
-        outline: none;
-      }
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  transition: 0.2s;
+}
 
-      button {
-        width: 100%;
-        padding: 14px;
-        border-radius: 12px;
-        border: none;
-        background: var(--primary);
-        color: white;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        transition: 0.2s;
-      }
+input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
 
-      button:hover {
-        background: #1d4ed8;
-      }
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 22px;
+  border-radius: 14px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
 
-      #reader {
-        margin-top: 20px;
-        display: none;
-        border-radius: 16px;
-        overflow: hidden;
-      }
+button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
 
-      .status {
-        margin-top: 18px;
-        padding: 12px;
-        border-radius: 12px;
-        font-size: 14px;
-        text-align: center;
-        display: none;
-      }
+#reader {
+  margin-top: 20px;
+  display: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
 
-      .success {
-        background: #dcfce7;
-        color: var(--success);
-      }
+.status {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  display: none;
+}
 
-      .error {
-        background: #fee2e2;
-        color: var(--danger);
-      }
+.success {
+  background: #dcfce7;
+  color: var(--success);
+}
 
-      .loading {
-        background: #e0f2fe;
-        color: var(--primary);
-      }
-    </style>
-  </head>
+.error {
+  background: #fee2e2;
+  color: var(--danger);
+}
 
-  <body>
-    <div class="wrapper">
-      <div class="card">
-        <div class="header">
-          <h2>QR Attendance</h2>
-          <p>Scan QR untuk melakukan presensi</p>
-        </div>
+.loading {
+  background: #dbeafe;
+  color: var(--primary);
+}
+</style>
+</head>
 
-        <input id="user_id" placeholder="User ID" />
-        <input id="device_id" placeholder="Device ID" />
-        <input id="course_id" placeholder="Course ID" />
-        <input id="session_id" placeholder="Session ID" />
+<body>
 
-        <button onclick="startScan()">Mulai Scan</button>
+<div class="wrapper">
+  <div class="card">
 
-        <div id="reader"></div>
-        <div id="status" class="status"></div>
-      </div>
+    <div class="header">
+      <h2>Scan QR Presensi</h2>
+      <p>Masukkan ID lalu scan QR</p>
     </div>
 
-    <script>
-      const baseUrl =
-        "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+    <div class="form-group">
+      <label>User ID</label>
+      <input id="user_id" placeholder="Masukkan User ID">
+    </div>
 
-      let scanner;
+    <div class="form-group">
+      <label>Device ID</label>
+      <input id="device_id" placeholder="Masukkan Device ID">
+    </div>
 
-      function startScan() {
-        if (!validate()) {
-          showStatus("Lengkapi semua field terlebih dahulu", "error");
-          return;
-        }
+    <button onclick="startScan()">Mulai Scan</button>
 
-        document.getElementById("reader").style.display = "block";
-        showStatus("Scanning...", "loading");
+    <div id="reader"></div>
+    <div id="status" class="status"></div>
 
-        scanner = new Html5Qrcode("reader");
+  </div>
+</div>
 
-        scanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          async (decodedText) => {
-            await scanner.stop();
-            document.getElementById("reader").style.display = "none";
-            sendCheckIn(decodedText);
-          },
-        );
-      }
+<script>
+const baseUrl = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
-      function validate() {
-        return (
-          user_id.value &&
-          device_id.value &&
-          course_id.value &&
-          session_id.value
-        );
-      }
+const defaultCourse = "CC-101";
+const defaultSession = "SES-01";
 
-      async function sendCheckIn(token) {
-        showStatus("Mengirim data...", "loading");
+let scanner;
 
-        const data = {
-          user_id: user_id.value,
-          device_id: device_id.value,
-          course_id: course_id.value,
-          session_id: session_id.value,
-          qr_token: token,
-          ts: new Date().toISOString(),
-        };
+function startScan() {
+  if (!user_id.value || !device_id.value) {
+    showStatus("Lengkapi User ID & Device ID", "error");
+    return;
+  }
 
-        try {
-          const res = await fetch(baseUrl + "/presence/checkin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+  document.getElementById("reader").style.display = "block";
+  showStatus("Scanning...", "loading");
 
-          const result = await res.json();
+  scanner = new Html5Qrcode("reader");
 
-          if (result.ok) {
-            showStatus("Presensi berhasil ✅", "success");
-          } else {
-            showStatus("Gagal: " + result.error, "error");
-          }
-        } catch (e) {
-          showStatus("Server tidak dapat dihubungi", "error");
-        }
-      }
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    async (decodedText) => {
+      await scanner.stop();
+      document.getElementById("reader").style.display = "none";
+      sendCheckIn(decodedText);
+    }
+  );
+}
 
-      function showStatus(msg, type) {
-        const el = document.getElementById("status");
-        el.innerText = msg;
-        el.className = "status " + type;
-        el.style.display = "block";
-      }
-    </script>
-  </body>
+async function sendCheckIn(token) {
+  showStatus("Mengirim data...", "loading");
+
+  const data = {
+    user_id: user_id.value,
+    device_id: device_id.value,
+    course_id: defaultCourse,
+    session_id: defaultSession,
+    qr_token: token,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(baseUrl + "?path=presence/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (result.ok) {
+      showStatus("Presensi berhasil ✅", "success");
+    } else {
+      showStatus("Gagal: " + result.error, "error");
+    }
+
+  } catch (e) {
+    showStatus("Server tidak dapat dihubungi", "error");
+  }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById("status");
+  el.innerText = msg;
+  el.className = "status " + type;
+  el.style.display = "block";
+}
+</script>
+
+</body>
 </html>
