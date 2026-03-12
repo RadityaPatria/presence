@@ -37,7 +37,8 @@
             margin-bottom: 20px;
         }
 
-        input, button {
+        input,
+        button {
             width: 100%;
             padding: 12px;
             margin-bottom: 10px;
@@ -47,16 +48,65 @@
             box-sizing: border-box;
         }
 
-        .btn-primary { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: var(--danger); color: white; border: none; font-weight: bold; cursor: pointer; display: none; }
-        .btn-warning { background: var(--warning); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-success { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
         /* Style Tab Navigasi */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { background: #e2e8f0; color: #64748b; font-weight: bold; border: none; cursor: pointer; padding: 12px; flex: 1; border-radius: 8px; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        .hidden { display: none; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            flex: 1;
+            border-radius: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
 
         .data-display {
             display: grid;
@@ -66,8 +116,16 @@
             margin-bottom: 20px;
         }
 
-        .data-val { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
-        .label { font-size: 0.8rem; color: #666; }
+        .data-val {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: #666;
+        }
 
         .log-box {
             background: #eee;
@@ -77,13 +135,6 @@
             font-size: 0.8rem;
             border-radius: 6px;
             font-family: monospace;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -137,7 +188,8 @@
             <h3>Pantau Device</h3>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="monitor-device-id" placeholder="ID Device yang dipantau" value="HP-MAHASISWA-01">
-                <button id="btn-monitor" class="btn-success" style="width: 120px; margin-bottom: 10px;" onclick="toggleMonitoring()">Pantau</button>
+                <button id="btn-monitor" class="btn-success" style="width: 120px; margin-bottom: 10px;"
+                    onclick="toggleMonitoring()">Pantau</button>
             </div>
 
             <div class="chart-container">
@@ -164,7 +216,7 @@
             } else {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('panel-admin').classList.remove('hidden');
-                if(!chartInstance) initChart(); // Inisialisasi grafik saat tab admin dibuka
+                if (!chartInstance) initChart(); // Inisialisasi grafik saat tab admin dibuka
             }
         }
 
@@ -211,9 +263,16 @@
             }
         }
 
+        // --- 3. LOG HELPER ---
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
+        }
+
+        // --- 4. SEND DATA TO GOOGLE SHEET ---
         async function sendData() {
             const deviceId = document.getElementById('device-id').value;
-            if(!deviceId) { logSender("Harap isi ID Device!"); return; }
+            if (!deviceId) { logSender("Harap isi ID Device!"); return; }
 
             const payload = {
                 device_id: deviceId,
@@ -232,7 +291,7 @@
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
-                
+
                 const text = await response.text();
                 let result;
                 try { result = JSON.parse(text); } catch { return logSender("Response bukan JSON."); }
@@ -303,7 +362,7 @@
 
         async function fetchLatestData() {
             const deviceId = document.getElementById('monitor-device-id').value;
-            if(!deviceId) return;
+            if (!deviceId) return;
 
             try {
                 // Mengambil data menggunakan GET Request ke endpoint latest
@@ -329,7 +388,7 @@
                     chartInstance.data.datasets[0].data.push(data.x);
                     chartInstance.data.datasets[1].data.push(data.y);
                     chartInstance.data.datasets[2].data.push(data.z);
-                    
+
                     chartInstance.update();
                 } else {
                     logAdmin("Gagal baca / device tidak ada.");
@@ -345,7 +404,7 @@
                 isMonitoring = true;
                 btn.style.background = "var(--danger)";
                 btn.textContent = "Stop";
-                
+
                 // Mulai polling data dari server setiap 3 detik
                 fetchLatestData(); // Tarikan pertama
                 monitorInterval = setInterval(fetchLatestData, 3000);
@@ -359,4 +418,5 @@
         }
     </script>
 </body>
+
 </html>

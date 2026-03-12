@@ -253,7 +253,7 @@ function getLatestAccel(params) {
 }
 
 function postAccel(body) {
-  const { device_id, samples } = body;
+  const { device_id, ts, samples } = body;
 
   if (!device_id)
     return jsonResponse(false, null, "missing_field: device_id");
@@ -265,7 +265,7 @@ function postAccel(body) {
     .openById(spreadsheet_id)
     .getSheetByName(accelerometer);
 
-  const timestamp = new Date().toISOString();
+  const serverTs = new Date().toISOString();
   let accepted = 0;
 
   samples.forEach(sample => {
@@ -276,7 +276,7 @@ function postAccel(body) {
         sample.x,
         sample.y,
         sample.z,
-        timestamp
+        serverTs
       ]);
       accepted++;
     }
