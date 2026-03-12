@@ -2,16 +2,22 @@ const spreadsheet_id = "1XVkpUBCZ3tWWuiY6o7zE_2R7tKUSSBfAXYweBjtWdes";
 const tokens = "tokens";
 const presence = "presence";
 const accelerometer = "accelerometer";
+const gps_sheet = "gps";
 
 function doPost(e) {
-  const path = e.parameter.path || "";
-  const body = JSON.parse(e.postData.contents);
+  try { 
+    const path = e.parameter.path || "";
+    const body = JSON.parse(e.postData.contents);
 
-  if (path === "presence/qr/generate") return generateQR(body);
-  if (path === "presence/checkin") return checkIn(body);
-  if (path === "telemetry/accel") return postAccel(body);
+    if (path === "presence/qr/generate") return generateQR(body);
+    if (path === "presence/checkin") return checkIn(body);
+    if (path === "telemetry/accel") return postAccel(body);
+    if (path === "telemetry/gps") return postGps(body);
 
-  return jsonResponse(false, null, "endpoint_not_found");
+    return jsonResponse(false, null, "endpoint_not_found");
+  } catch (error) {
+    return jsonResponse(false, null, "server_error: " + error.message);
+  }
 }
 
 function doGet(e) {
@@ -20,6 +26,13 @@ function doGet(e) {
 
   // presence
   if (path === "presence/status") return checkStatus(e.parameter);
+
+  // accelerometry
+  if (path === "telemetry/accel/latest") return getLatestAccel(e.parameter);
+
+  // GPS
+  if (path === "telemetry/gps/latest") return getLatestGps(e.parameter);
+  if (path === "telemetry/gps/history") return getGpsHistory(e.parameter);
 
   if (page === "scan") {
     return HtmlService
@@ -33,8 +46,6 @@ function doGet(e) {
       .createHtmlOutputFromFile("index")
       .setTitle("Presence System");
   }
-  // accelerometry
-  if (path === "telemetry/accel/latest") return getLatestAccel(e.parameter);
 
   return jsonResponse(false, null, "endpoint_not_found");
 }
@@ -46,6 +57,10 @@ function jsonResponse(ok, data = null, error = null) {
     ))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// ==========================================
+// FITUR PRESENSI (QR)
+// ==========================================
 
 function generateQR(body) {
   const { course_id, session_id, timestamp } = body;
@@ -133,7 +148,6 @@ function checkIn(body) {
   if (now > expiresAt)
     return jsonResponse(false, null, "token_expired");
 
-  // Ambil course_id dan session_id dari token
   const course_id = tokenData[2];
   const session_id = tokenData[1];
 
@@ -208,7 +222,10 @@ function checkStatus(params) {
   });
 }
 
-// accelerometer
+// ==========================================
+// FITUR TELEMETRI (ACCELEROMETER)
+// ==========================================
+
 function getLatestAccel(params) {
   const { device_id } = params;
 
@@ -236,7 +253,7 @@ function getLatestAccel(params) {
 }
 
 function postAccel(body) {
-  const { device_id, samples } = body;
+  const { device_id, ts, samples } = body;
 
   if (!device_id)
     return jsonResponse(false, null, "missing_field: device_id");
@@ -248,7 +265,7 @@ function postAccel(body) {
     .openById(spreadsheet_id)
     .getSheetByName(accelerometer);
 
-  const timestamp = new Date().toISOString();
+  const serverTs = new Date().toISOString();
   let accepted = 0;
 
   samples.forEach(sample => {
@@ -259,11 +276,102 @@ function postAccel(body) {
         sample.x,
         sample.y,
         sample.z,
-        timestamp
+        serverTs
       ]);
       accepted++;
     }
   });
 
   return jsonResponse(true, { accepted });
+}
+
+
+// ==========================================
+// FITUR BARU: MODUL 3 (GPS)
+// ==========================================
+
+// 1. Log GPS Point (POST)
+function postGps(body) {
+  const { device_id, ts, lat, lng, accuracy_m } = body;
+
+  if (!device_id || lat === undefined || lng === undefined) {
+    return jsonResponse(false, null, "missing_field: device_id, lat, or lng");
+  }
+
+  const sheet = SpreadsheetApp.openById(spreadsheet_id).getSheetByName(gps_sheet);
+  if (!sheet) return jsonResponse(false, null, "sheet_not_found: gps");
+
+  const timestamp = ts || new Date().toISOString();
+  const serverTs = new Date().toISOString();
+
+  sheet.appendRow([
+    device_id,
+    timestamp,
+    lat,
+    lng,
+    accuracy_m || "",
+    serverTs
+  ]);
+
+  return jsonResponse(true, { accepted: true });
+}
+
+// 2. Ambil GPS Terbaru / Marker (GET)
+function getLatestGps(params) {
+  const { device_id } = params;
+
+  if (!device_id) return jsonResponse(false, null, "missing_field: device_id");
+
+  const sheet = SpreadsheetApp.openById(spreadsheet_id).getSheetByName(gps_sheet);
+  if (!sheet) return jsonResponse(false, null, "sheet_not_found: gps");
+
+  const data = sheet.getDataRange().getValues();
+
+  // Cari data dari bawah (paling baru)
+  for (let i = data.length - 1; i > 0; i--) {
+    if (String(data[i][0]).trim() === String(device_id).trim()) {
+      return jsonResponse(true, {
+        ts: data[i][1],
+        lat: parseFloat(data[i][2]),
+        lng: parseFloat(data[i][3]),
+        accuracy_m: data[i][4] ? parseFloat(data[i][4]) : null
+      });
+    }
+  }
+
+  return jsonResponse(false, null, "device_not_found");
+}
+
+// 3. Ambil GPS History / Polyline (GET)
+function getGpsHistory(params) {
+  const { device_id, limit } = params;
+
+  if (!device_id) return jsonResponse(false, null, "missing_field: device_id");
+
+  const maxLimit = limit ? parseInt(limit) : 200; // Default limit 200 titik
+  const sheet = SpreadsheetApp.openById(spreadsheet_id).getSheetByName(gps_sheet);
+  if (!sheet) return jsonResponse(false, null, "sheet_not_found: gps");
+
+  const data = sheet.getDataRange().getValues();
+  let items = [];
+
+  // Ambil data dari bawah (paling baru), dibatasi oleh maxLimit
+  for (let i = data.length - 1; i > 0; i--) {
+    if (String(data[i][0]).trim() === String(device_id).trim()) {
+      items.push({
+        ts: data[i][1],
+        lat: parseFloat(data[i][2]),
+        lng: parseFloat(data[i][3])
+      });
+      if (items.length >= maxLimit) break;
+    }
+  }
+
+  // Penting: Balikkan array agar data terurut dari yang Paling Lama -> Paling Baru (Untuk menggambar jejak rute/polyline yang benar)
+  items.reverse();
+
+  return jsonResponse(true, {
+    device_id: device_id,
+    items: items
+  });
 }

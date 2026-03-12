@@ -4,13 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telemetri Sensor HP</title>
+    <title>Telemetri Sensor HP & Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
             --primary: #2563eb;
             --danger: #dc2626;
             --warning: #f59e0b;
+            --success: #16a34a;
             --bg: #f8fafc;
         }
 
@@ -19,6 +21,7 @@
             background: var(--bg);
             padding: 20px;
             color: #333;
+            margin: 0;
         }
 
         .container {
@@ -70,6 +73,41 @@
             cursor: pointer;
         }
 
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Style Tab Navigasi */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            flex: 1;
+            border-radius: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
         .data-display {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -89,13 +127,14 @@
             color: #666;
         }
 
-        #log {
+        .log-box {
             background: #eee;
             padding: 10px;
             height: 120px;
             overflow-y: auto;
             font-size: 0.8rem;
             border-radius: 6px;
+            font-family: monospace;
         }
     </style>
 </head>
@@ -103,9 +142,14 @@
 <body>
 
     <div class="container">
-        <h2 style="text-align: center;">Telemetri Sensor HP</h2>
+        <h2 style="text-align: center;">Dashboard Telemetri</h2>
 
-        <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('sender')">📱 Mode Mahasiswa</button>
+            <button class="tab-btn" onclick="switchTab('admin')">📊 Mode Admin</button>
+        </div>
+
+        <div id="panel-sender" class="card">
             <h3>1. Konfigurasi Device</h3>
             <input type="text" id="device-id" placeholder="Masukkan ID Device">
 
@@ -114,7 +158,6 @@
             </button>
 
             <h3>2. Data Sensor Real-time</h3>
-
             <div class="data-display">
                 <div>
                     <div class="label">Accel X</div>
@@ -138,26 +181,58 @@
                 Hentikan Pengiriman
             </button>
 
-            <div id="log">Log status...</div>
+            <div id="log-sender" class="log-box">Log pengiriman...</div>
+        </div>
+
+        <div id="panel-admin" class="card hidden">
+            <h3>Pantau Device</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="monitor-device-id" placeholder="ID Device yang dipantau" value="HP-MAHASISWA-01">
+                <button id="btn-monitor" class="btn-success" style="width: 120px; margin-bottom: 10px;"
+                    onclick="toggleMonitoring()">Pantau</button>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="accelChart"></canvas>
+            </div>
+
+            <div id="log-admin" class="log-box" style="height: 80px;">Menunggu data...</div>
         </div>
     </div>
 
     <script>
+        // PASTIKAN URL INI SESUAI DENGAN DEPLOYMENT TERAKHIR ANDA (/exec)
         const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
+        // ================= LOGIC TAB =================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('panel-sender').classList.add('hidden');
+            document.getElementById('panel-admin').classList.add('hidden');
+
+            if (tabName === 'sender') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('panel-sender').classList.remove('hidden');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('panel-admin').classList.remove('hidden');
+                if (!chartInstance) initChart(); // Inisialisasi grafik saat tab admin dibuka
+            }
+        }
+
+        // ================= LOGIC PENGIRIM (SENDER) =================
         let currentMotion = { x: 0, y: 0, z: 0 };
         let isSending = false;
         let sendInterval;
 
-        function log(msg) {
-            const el = document.getElementById('log');
+        function logSender(msg) {
+            const el = document.getElementById('log-sender');
             el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
         }
 
         function handleMotion(event) {
             const acc = event.accelerationIncludingGravity;
             if (!acc) return;
-
             currentMotion.x = (acc.x ?? 0).toFixed(2);
             currentMotion.y = (acc.y ?? 0).toFixed(2);
             currentMotion.z = (acc.z ?? 0).toFixed(2);
@@ -169,32 +244,35 @@
 
         function requestSensorPermission() {
             if (location.protocol !== "https:" && location.hostname !== "localhost") {
-                log("iOS butuh HTTPS untuk sensor.");
+                logSender("iOS butuh HTTPS untuk sensor.");
                 return;
             }
 
-            if (typeof DeviceMotionEvent !== 'undefined' &&
-                typeof DeviceMotionEvent.requestPermission === 'function') {
-
-                DeviceMotionEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            window.addEventListener('devicemotion', handleMotion);
-                            log("Izin sensor diberikan.");
-                        } else {
-                            log("Izin sensor ditolak.");
-                        }
-                    })
-                    .catch(err => log("Error izin: " + err));
-
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion);
+                        logSender("Izin sensor diberikan.");
+                    } else {
+                        logSender("Izin sensor ditolak.");
+                    }
+                }).catch(err => logSender("Error izin: " + err));
             } else {
                 window.addEventListener('devicemotion', handleMotion);
-                log("Sensor aktif (Android / non-iOS).");
+                logSender("Sensor aktif (Android / non-iOS).");
             }
         }
 
+        // --- 3. LOG HELPER ---
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
+        }
+
+        // --- 4. SEND DATA TO GOOGLE SHEET ---
         async function sendData() {
             const deviceId = document.getElementById('device-id').value;
+            if (!deviceId) { logSender("Harap isi ID Device!"); return; }
 
             const payload = {
                 device_id: deviceId,
@@ -216,51 +294,129 @@
 
                 const text = await response.text();
                 let result;
-
-                try {
-                    result = JSON.parse(text);
-                } catch {
-                    log("Response bukan JSON.");
-                    return;
-                }
+                try { result = JSON.parse(text); } catch { return logSender("Response bukan JSON."); }
 
                 if (result.ok) {
-                    log(`Terkirim: X=${currentMotion.x}, Y=${currentMotion.y}, Z=${currentMotion.z}`);
+                    logSender(`Terkirim: X=${currentMotion.x}, Y=${currentMotion.y}, Z=${currentMotion.z}`);
                 } else {
-                    log("Gagal: " + result.error);
+                    logSender("Gagal: " + result.error);
                 }
-
             } catch (e) {
-                log("Error jaringan / CORS.");
-                console.error(e);
+                logSender("Error jaringan / CORS.");
             }
         }
 
         function toggleSending() {
-            const btnStart = document.getElementById('btn-start');
-            const btnStop = document.getElementById('btn-stop');
-
             if (!isSending) {
                 isSending = true;
-                btnStart.style.display = 'none';
-                btnStop.style.display = 'block';
-                sendInterval = setInterval(sendData, 5000);
-                log("Mulai mengirim data...");
+                document.getElementById('btn-start').style.display = 'none';
+                document.getElementById('btn-stop').style.display = 'block';
+                sendInterval = setInterval(sendData, 3000); // Kirim setiap 3 detik
+                logSender("Mulai mengirim data...");
             } else {
                 isSending = false;
                 clearInterval(sendInterval);
-                btnStart.style.display = 'block';
-                btnStop.style.display = 'none';
-                log("Pengiriman dihentikan.");
+                document.getElementById('btn-start').style.display = 'block';
+                document.getElementById('btn-stop').style.display = 'none';
+                logSender("Pengiriman dihentikan.");
             }
         }
 
-        // Auto listener untuk Android
-        if (typeof DeviceMotionEvent !== 'undefined' &&
-            typeof DeviceMotionEvent.requestPermission !== 'function') {
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission !== 'function') {
             window.addEventListener('devicemotion', handleMotion);
         }
-    </script>
 
+        // ================= LOGIC ADMIN (VIEWER & CHART) =================
+        let isMonitoring = false;
+        let monitorInterval;
+        let chartInstance = null;
+
+        function logAdmin(msg) {
+            const el = document.getElementById('log-admin');
+            el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('accelChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Waktu
+                    datasets: [
+                        { label: 'Sumbu X', borderColor: 'rgba(220, 38, 38, 1)', backgroundColor: 'rgba(220, 38, 38, 0.1)', data: [], tension: 0.3 },
+                        { label: 'Sumbu Y', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'rgba(22, 163, 74, 0.1)', data: [], tension: 0.3 },
+                        { label: 'Sumbu Z', borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.1)', data: [], tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false }, // Sembunyikan label X agar rapi
+                        y: { suggestedMin: -15, suggestedMax: 15 } // Skala gravitasi
+                    },
+                    animation: { duration: 0 } // Matikan animasi agar pembaruan data real-time tidak patah-patah
+                }
+            });
+        }
+
+        async function fetchLatestData() {
+            const deviceId = document.getElementById('monitor-device-id').value;
+            if (!deviceId) return;
+
+            try {
+                // Mengambil data menggunakan GET Request ke endpoint latest
+                const response = await fetch(`${API_URL}?path=telemetry/accel/latest&device_id=${deviceId}`);
+                const result = await response.json();
+
+                if (result.ok) {
+                    const data = result.data;
+                    const timeLabel = new Date(data.t).toLocaleTimeString();
+
+                    logAdmin(`Data baru: X=${data.x}, Y=${data.y}, Z=${data.z}`);
+
+                    // Batasi jumlah titik grafik menjadi maksimal 15 titik
+                    if (chartInstance.data.labels.length > 15) {
+                        chartInstance.data.labels.shift();
+                        chartInstance.data.datasets[0].data.shift();
+                        chartInstance.data.datasets[1].data.shift();
+                        chartInstance.data.datasets[2].data.shift();
+                    }
+
+                    // Tambahkan data baru ke grafik
+                    chartInstance.data.labels.push(timeLabel);
+                    chartInstance.data.datasets[0].data.push(data.x);
+                    chartInstance.data.datasets[1].data.push(data.y);
+                    chartInstance.data.datasets[2].data.push(data.z);
+
+                    chartInstance.update();
+                } else {
+                    logAdmin("Gagal baca / device tidak ada.");
+                }
+            } catch (e) {
+                logAdmin("Error mengambil data dari server.");
+            }
+        }
+
+        function toggleMonitoring() {
+            const btn = document.getElementById('btn-monitor');
+            if (!isMonitoring) {
+                isMonitoring = true;
+                btn.style.background = "var(--danger)";
+                btn.textContent = "Stop";
+
+                // Mulai polling data dari server setiap 3 detik
+                fetchLatestData(); // Tarikan pertama
+                monitorInterval = setInterval(fetchLatestData, 3000);
+            } else {
+                isMonitoring = false;
+                btn.style.background = "var(--success)";
+                btn.textContent = "Pantau";
+                clearInterval(monitorInterval);
+                logAdmin("Pemantauan dihentikan.");
+            }
+        }
+    </script>
 </body>
+
 </html>
