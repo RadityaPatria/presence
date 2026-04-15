@@ -48,12 +48,23 @@
             box-sizing: border-box;
         }
 
+        input[readonly] { 
+            background-color: #e2e8f0; 
+            color: #64748b; 
+            cursor: not-allowed; 
+        }
+
         .btn-primary {
             background: var(--primary);
             color: white;
             border: none;
             font-weight: bold;
             cursor: pointer;
+        }
+
+        .btn-primary:disabled { 
+            background: #94a3b8; 
+            cursor: not-allowed; 
         }
 
         .btn-danger {
@@ -136,6 +147,13 @@
             border-radius: 6px;
             font-family: monospace;
         }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -151,7 +169,7 @@
 
         <div id="panel-sender" class="card">
             <h3>1. Konfigurasi Device</h3>
-            <input type="text" id="device-id" placeholder="Masukkan ID Device">
+            <input type="text" id="device-id" placeholder="Mendeteksi Device ID..." readonly>
 
             <button onclick="requestSensorPermission()" class="btn-warning">
                 Klik Ini Dulu (Wajib untuk iPhone/iOS)
@@ -173,8 +191,12 @@
                 </div>
             </div>
 
-            <button id="btn-start" class="btn-primary" onclick="toggleSending()">
-                Mulai Kirim Data ke Cloud
+            <div class="chart-container">
+                <canvas id="senderChart"></canvas>
+            </div>
+
+            <button id="btn-start" class="btn-primary" onclick="toggleSending()" disabled>
+                Menyiapkan Device...
             </button>
 
             <button id="btn-stop" class="btn-danger" onclick="toggleSending()">
@@ -187,13 +209,13 @@
         <div id="panel-admin" class="card hidden">
             <h3>Pantau Device</h3>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="monitor-device-id" placeholder="ID Device yang dipantau" value="HP-MAHASISWA-01">
+                <input type="text" id="monitor-device-id" placeholder="ID Device yang dipantau" value="">
                 <button id="btn-monitor" class="btn-success" style="width: 120px; margin-bottom: 10px;"
                     onclick="toggleMonitoring()">Pantau</button>
             </div>
 
             <div class="chart-container">
-                <canvas id="accelChart"></canvas>
+                <canvas id="adminChart"></canvas>
             </div>
 
             <div id="log-admin" class="log-box" style="height: 80px;">Menunggu data...</div>
@@ -201,7 +223,6 @@
     </div>
 
     <script>
-        // PASTIKAN URL INI SESUAI DENGAN DEPLOYMENT TERAKHIR ANDA (/exec)
         const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
 
         // ================= LOGIC TAB =================
@@ -216,31 +237,104 @@
             } else {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('panel-admin').classList.remove('hidden');
-                if (!chartInstance) initChart(); // Inisialisasi grafik saat tab admin dibuka
+                if (!adminChartInstance) initAdminChart();
             }
         }
+
+        // ================= FINGERPRINT LOGIC =================
+        const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4')
+            .then(FingerprintJS => FingerprintJS.load());
+
+        fpPromise
+            .then(fp => fp.get())
+            .then(result => {
+                document.getElementById('device-id').value = result.visitorId;
+                const btnStart = document.getElementById('btn-start');
+                btnStart.disabled = false;
+                btnStart.innerText = "Mulai Kirim Data ke Cloud";
+                logSender("Device ID berhasil dideteksi.");
+            })
+            .catch(err => {
+                logSender("Gagal mendeteksi device fingerprint.");
+                document.getElementById('device-id').placeholder = "Gagal mendeteksi";
+            });
 
         // ================= LOGIC PENGIRIM (SENDER) =================
         let currentMotion = { x: 0, y: 0, z: 0 };
         let isSending = false;
+        let isSensorActive = false;
         let sendInterval;
+        let senderChartInstance = null;
 
         function logSender(msg) {
             const el = document.getElementById('log-sender');
             el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
         }
 
+        // Inisialisasi Grafik Pengirim
+        function initSenderChart() {
+            const ctx = document.getElementById('senderChart').getContext('2d');
+            senderChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'X', borderColor: 'rgba(220, 38, 38, 1)', backgroundColor: 'transparent', data: [], tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                        { label: 'Y', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'transparent', data: [], tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                        { label: 'Z', borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'transparent', data: [], tension: 0.3, pointRadius: 0, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false },
+                        y: { suggestedMin: -15, suggestedMax: 15 }
+                    },
+                    animation: { duration: 0 },
+                    plugins: { legend: { display: true, position: 'top' } }
+                }
+            });
+        }
+        
+        // Panggil saat halaman dimuat
+        initSenderChart();
+
+        // Tangkap event devicemotion
         function handleMotion(event) {
             const acc = event.accelerationIncludingGravity;
             if (!acc) return;
             currentMotion.x = (acc.x ?? 0).toFixed(2);
             currentMotion.y = (acc.y ?? 0).toFixed(2);
             currentMotion.z = (acc.z ?? 0).toFixed(2);
+            isSensorActive = true;
+        }
 
+        // Timer untuk update UI (Angka & Grafik Mahasiswa) agar tidak lag
+        setInterval(() => {
+            if (!isSensorActive) return;
+
+            // Update Angka
             document.getElementById('val-x').textContent = currentMotion.x;
             document.getElementById('val-y').textContent = currentMotion.y;
             document.getElementById('val-z').textContent = currentMotion.z;
-        }
+
+            // Update Grafik (Maksimal 30 titik agar tidak berat)
+            if (senderChartInstance) {
+                const timeLabel = new Date().toLocaleTimeString();
+                if (senderChartInstance.data.labels.length > 30) {
+                    senderChartInstance.data.labels.shift();
+                    senderChartInstance.data.datasets[0].data.shift();
+                    senderChartInstance.data.datasets[1].data.shift();
+                    senderChartInstance.data.datasets[2].data.shift();
+                }
+                senderChartInstance.data.labels.push(timeLabel);
+                senderChartInstance.data.datasets[0].data.push(currentMotion.x);
+                senderChartInstance.data.datasets[1].data.push(currentMotion.y);
+                senderChartInstance.data.datasets[2].data.push(currentMotion.z);
+                senderChartInstance.update();
+            }
+        }, 200); // Update grafik 5x per detik
 
         function requestSensorPermission() {
             if (location.protocol !== "https:" && location.hostname !== "localhost") {
@@ -263,13 +357,7 @@
             }
         }
 
-        // --- 3. LOG HELPER ---
-        function log(msg) {
-            const el = document.getElementById('log');
-            el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
-        }
-
-        // --- 4. SEND DATA TO GOOGLE SHEET ---
+        // --- SEND DATA TO GOOGLE SHEET ---
         async function sendData() {
             const deviceId = document.getElementById('device-id').value;
             if (!deviceId) { logSender("Harap isi ID Device!"); return; }
@@ -329,19 +417,19 @@
         // ================= LOGIC ADMIN (VIEWER & CHART) =================
         let isMonitoring = false;
         let monitorInterval;
-        let chartInstance = null;
+        let adminChartInstance = null;
 
         function logAdmin(msg) {
             const el = document.getElementById('log-admin');
             el.innerHTML = `<div>> ${msg}</div>` + el.innerHTML;
         }
 
-        function initChart() {
-            const ctx = document.getElementById('accelChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
+        function initAdminChart() {
+            const ctx = document.getElementById('adminChart').getContext('2d');
+            adminChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [], // Waktu
+                    labels: [],
                     datasets: [
                         { label: 'Sumbu X', borderColor: 'rgba(220, 38, 38, 1)', backgroundColor: 'rgba(220, 38, 38, 0.1)', data: [], tension: 0.3 },
                         { label: 'Sumbu Y', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'rgba(22, 163, 74, 0.1)', data: [], tension: 0.3 },
@@ -352,10 +440,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { display: false }, // Sembunyikan label X agar rapi
-                        y: { suggestedMin: -15, suggestedMax: 15 } // Skala gravitasi
+                        x: { display: false },
+                        y: { suggestedMin: -15, suggestedMax: 15 }
                     },
-                    animation: { duration: 0 } // Matikan animasi agar pembaruan data real-time tidak patah-patah
+                    animation: { duration: 0 }
                 }
             });
         }
@@ -365,7 +453,6 @@
             if (!deviceId) return;
 
             try {
-                // Mengambil data menggunakan GET Request ke endpoint latest
                 const response = await fetch(`${API_URL}?path=telemetry/accel/latest&device_id=${deviceId}`);
                 const result = await response.json();
 
@@ -375,21 +462,18 @@
 
                     logAdmin(`Data baru: X=${data.x}, Y=${data.y}, Z=${data.z}`);
 
-                    // Batasi jumlah titik grafik menjadi maksimal 15 titik
-                    if (chartInstance.data.labels.length > 15) {
-                        chartInstance.data.labels.shift();
-                        chartInstance.data.datasets[0].data.shift();
-                        chartInstance.data.datasets[1].data.shift();
-                        chartInstance.data.datasets[2].data.shift();
+                    if (adminChartInstance.data.labels.length > 15) {
+                        adminChartInstance.data.labels.shift();
+                        adminChartInstance.data.datasets[0].data.shift();
+                        adminChartInstance.data.datasets[1].data.shift();
+                        adminChartInstance.data.datasets[2].data.shift();
                     }
 
-                    // Tambahkan data baru ke grafik
-                    chartInstance.data.labels.push(timeLabel);
-                    chartInstance.data.datasets[0].data.push(data.x);
-                    chartInstance.data.datasets[1].data.push(data.y);
-                    chartInstance.data.datasets[2].data.push(data.z);
-
-                    chartInstance.update();
+                    adminChartInstance.data.labels.push(timeLabel);
+                    adminChartInstance.data.datasets[0].data.push(data.x);
+                    adminChartInstance.data.datasets[1].data.push(data.y);
+                    adminChartInstance.data.datasets[2].data.push(data.z);
+                    adminChartInstance.update();
                 } else {
                     logAdmin("Gagal baca / device tidak ada.");
                 }
@@ -405,8 +489,7 @@
                 btn.style.background = "var(--danger)";
                 btn.textContent = "Stop";
 
-                // Mulai polling data dari server setiap 3 detik
-                fetchLatestData(); // Tarikan pertama
+                fetchLatestData();
                 monitorInterval = setInterval(fetchLatestData, 3000);
             } else {
                 isMonitoring = false;

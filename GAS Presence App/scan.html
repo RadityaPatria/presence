@@ -148,6 +148,12 @@
       box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
     }
 
+    .form-group input[readonly] {
+      background-color: var(--gray-200);
+      cursor: not-allowed;
+      color: var(--gray-500);
+    }
+
     /* Button */
     .btn-scan {
       width: 100%;
@@ -168,12 +174,12 @@
       gap: 0.5rem;
     }
 
-    .btn-scan:hover {
+    .btn-scan:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
     }
 
-    .btn-scan:active {
+    .btn-scan:active:not(:disabled) {
       transform: translateY(0);
     }
 
@@ -336,12 +342,11 @@
 
       <div class="form-group">
         <label>Device ID</label>
-        <input id="device_id" placeholder="Masukkan Device ID kamu" autocomplete="off" />
+        <input id="device_id" placeholder="Mendeteksi Device ID..." autocomplete="off" readonly />
       </div>
 
-      <button class="btn-scan" id="btn-scan" onclick="startScan()">
-        <span class="icon-scan">📷</span>
-        Mulai Scan QR
+      <button class="btn-scan" id="btn-scan" onclick="startScan()" disabled>
+        <span class="spinner" id="btn-spinner"></span> Menyiapkan Device...
       </button>
 
       <div id="reader"></div>
@@ -352,15 +357,31 @@
   </div>
 
   <script>
-    const baseUrl =
-      "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+    const baseUrl = "https://script.google.com/macros/s/AKfycbzwaWQqPtM0bVDoOfTvX6QhOi9cXWulQYVoWKErPQd9cULmjFQDc8jYY1OIeDg9mYqH/exec";
 
     let scanner;
     const btnScan = document.getElementById("btn-scan");
+    const deviceIdInput = document.getElementById("device_id");
+
+    // Initialize FingerprintJS
+    const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4')
+      .then(FingerprintJS => FingerprintJS.load());
+
+    // Generate unique Device ID on page load
+    fpPromise
+      .then(fp => fp.get())
+      .then(result => {
+        deviceIdInput.value = result.visitorId;
+        resetButton(); // Enable button once fingerprint is ready
+      })
+      .catch(err => {
+        showStatus("Gagal mendeteksi perangkat. Silakan muat ulang halaman.", "error");
+        deviceIdInput.placeholder = "Gagal mendeteksi";
+      });
 
     function startScan() {
       if (!validate()) {
-        showStatus("Lengkapi User ID dan Device ID terlebih dahulu", "error");
+        showStatus("Lengkapi User ID terlebih dahulu", "error");
         return;
       }
 

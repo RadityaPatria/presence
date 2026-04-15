@@ -16,7 +16,9 @@
         .tab-btn.active { background: #2563eb; color: white; }
         .hidden { display: none; }
         input, button { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        input[readonly] { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; }
         .btn-primary { background: #2563eb; color: white; cursor: pointer; font-weight: bold; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-danger { background: #dc2626; color: white; cursor: pointer; font-weight: bold; display: none; }
         
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px; }
@@ -39,7 +41,7 @@
 
     <div id="panel-sender">
         <label>Device ID:</label>
-        <input type="text" id="device-id" value="HP-MAHASISWA-01">
+        <input type="text" id="device-id" placeholder="Mendeteksi Device ID..." readonly>
         
         <div class="grid-3">
             <div>Latitude<div id="val-lat" class="val">-</div></div>
@@ -47,14 +49,14 @@
             <div>Akurasi<div id="val-acc" class="val">-</div></div>
         </div>
 
-        <button id="btn-start" class="btn-primary" onclick="toggleGps()">Mulai Lacak GPS</button>
+        <button id="btn-start" class="btn-primary" onclick="toggleGps()" disabled>Menyiapkan Device...</button>
         <button id="btn-stop" class="btn-danger" onclick="toggleGps()">Hentikan Lacak</button>
         <div id="log-sender" class="log-box">Menunggu aksi...</div>
     </div>
 
     <div id="panel-admin" class="hidden">
         <div style="display: flex; gap:10px;">
-            <input type="text" id="monitor-id" value="HP-MAHASISWA-01" placeholder="Device ID">
+            <input type="text" id="monitor-id" placeholder="Masukkan Device ID Mahasiswa">
             <button id="btn-monitor" class="btn-primary" style="width: 150px;" onclick="toggleMonitor()">Pantau</button>
         </div>
         
@@ -86,6 +88,24 @@
             if(!map) initMap(); // Peta dirender saat tab dibuka
         }
     }
+
+    // ================= FINGERPRINT LOGIC =================
+    const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4')
+        .then(FingerprintJS => FingerprintJS.load());
+
+    fpPromise
+        .then(fp => fp.get())
+        .then(result => {
+            document.getElementById('device-id').value = result.visitorId;
+            const btnStart = document.getElementById('btn-start');
+            btnStart.disabled = false;
+            btnStart.innerText = "Mulai Lacak GPS";
+            logS("Device ID berhasil dideteksi.");
+        })
+        .catch(err => {
+            logS("Gagal mendeteksi device fingerprint.");
+            document.getElementById('device-id').placeholder = "Gagal mendeteksi";
+        });
 
     // ================= SENDER LOGIC (Fake GPS Ready) =================
     let watchId = null;
