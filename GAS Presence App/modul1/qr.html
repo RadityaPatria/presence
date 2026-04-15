@@ -139,31 +139,6 @@
         }
       }
 
-      const currentCourseId = document.getElementById('input-course').value.trim();
-      const currentSessionId = document.getElementById('input-session').value.trim();
-
-      // Call ke Google Apps Script
-      google.script.run
-        .withSuccessHandler(function (result) {
-          btnStart.disabled = false;
-          btnStart.innerHTML = '<i class="fas fa-bolt mr-2"></i>Terapkan & Generate QR';
-
-          if (result.ok) {
-            const token = result.data.qr_token;
-            qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + token;
-            startTimer(30);
-          } else {
-            alert("Error: " + result.error);
-          }
-        })
-        .withFailureHandler(function (error) {
-          btnStart.disabled = false;
-          btnStart.innerHTML = '<i class="fas fa-bolt mr-2"></i>Terapkan & Generate QR';
-          alert("Gagal generate QR: " + error.message);
-        })
-        .generateQRFromClient(currentCourseId, currentSessionId);
-    }
-
       function startTimer(seconds) {
         clearInterval(qrInterval);
         let timeLeft = seconds;
