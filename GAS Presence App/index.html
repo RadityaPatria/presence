@@ -2,246 +2,148 @@
 <html lang="id">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Computing Portal | UNAIR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <title>Dashboard Presensi - Cloud Computing</title>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: #f4f7f6;
-      color: #333;
-    }
-
-    header {
-      background-color: #0056b3;
-      color: white;
-      padding: 1.5rem 2rem;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    header p {
-      margin-top: 0.5rem;
-      opacity: 0.8;
-    }
-
-    /* Mengubah container agar berada di tengah (karena list dihapus) */
-    .container {
-      max-width: 600px;
-      margin: 3rem auto;
-      padding: 0 1rem;
-    }
-
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 2rem;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    }
-
-    .card h2 {
-      margin-bottom: 1rem;
-      color: #2c3e50;
-      text-align: center;
-    }
-
-    .input-section {
-      background: #f8f9fa;
-      padding: 1.5rem;
-      border-radius: 8px;
-      border: 1px solid #eee;
-      margin-bottom: 1.5rem;
-    }
-
-    .input-section label {
-      display: block;
-      font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    .input-section input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-
-    .btn-generate {
-      width: 100%;
-      padding: 12px;
-      background: #0056b3;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1rem;
-      transition: background 0.3s;
-    }
-
-    .btn-generate:hover {
-      background: #004494;
-    }
-
-    .subtitle {
-      color: #7f8c8d;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-      text-align: center;
-    }
-
-    .qr-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      background-color: #f8f9fa;
-      border: 2px dashed #ccc;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-    }
-
-    .qr-container img {
-      max-width: 100%;
-      height: auto;
-    }
-
-    .timer {
-      text-align: center;
-      font-weight: bold;
-      color: #e74c3c;
-      font-size: 1.2rem;
-    }
-
-    /* Area QR disembunyikan secara default */
-    #qr-display-area {
-      display: none;
-      margin-top: 2rem;
-      border-top: 2px solid #eee;
-      padding-top: 1.5rem;
-    }
-  </style>
-</head>
-
-<body>
-  <header>
-    <h1>Dashboard Presensi Mahasiswa</h1>
-    <p>Mata Kuliah: Cloud Computing</p>
-  </header>
-
-  <main class="container">
-    <div class="card">
-      <h2>Mulai Sesi Presensi</h2>
-
-      <div class="input-section">
-        <label>ID Mata Kuliah:</label>
-        <input type="text" id="input-course" placeholder="Contoh: CC-101">
-
-        <label>ID Sesi:</label>
-        <input type="text" id="input-session" placeholder="Contoh: SES-01">
-
-        <button class="btn-generate" id="btn-start">Terapkan & Generate QR</button>
-      </div>
-
-      <div id="qr-display-area">
-        <p class="subtitle">Buka aplikasi presensi Anda dan scan QR di bawah ini.</p>
-
-        <div class="qr-container">
-          <img src="" alt="QR Code Presensi" id="qr-image">
-        </div>
-
-        <p class="timer">Berlaku selama: <span id="time-left">30</span> detik</p>
-      </div>
-
-    </div>
-  </main>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const qrImage = document.getElementById('qr-image');
-      const timeLeftSpan = document.getElementById('time-left');
-      const qrDisplayArea = document.getElementById('qr-display-area');
-      const btnStart = document.getElementById('btn-start');
-
-      let qrInterval;
-
-      btnStart.addEventListener('click', startSession);
-
-      function startSession() {
-        const courseId = document.getElementById('input-course').value.trim();
-        const sessionId = document.getElementById('input-session').value.trim();
-
-        if (!courseId || !sessionId) {
-          alert("Harap isi ID Mata Kuliah dan ID Sesi terlebih dahulu!");
-          return;
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        qrDisplayArea.style.display = 'block';
-        qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
-        btnStart.disabled = true;
-        btnStart.innerText = "Generating...";
-        generateQR();
-      }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
 
-      function generateQR() {
-        const currentCourseId = document.getElementById('input-course').value.trim();
-        const currentSessionId = document.getElementById('input-session').value.trim();
+        .hero-gradient {
+            background: radial-gradient(circle at top right, #1e40af, #1e3a8a, #0f172a);
+        }
 
-        google.script.run
-          .withSuccessHandler(function (result) {
-            btnStart.disabled = false;
-            btnStart.innerText = "Terapkan & Generate QR";
+        .blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #3b82f6;
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
 
-            if (result.ok) {
-              const token = result.data.qr_token;
-              qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + token;
-              startTimer(30);
-            } else {
-              console.error("Server merespons dengan error:", result.error);
-              alert("Error: " + result.error);
-            }
-          })
-          .withFailureHandler(function (error) {
-            btnStart.disabled = false;
-            btnStart.innerText = "Terapkan & Generate QR";
-            console.error("Gagal generate QR:", error);
-            alert("Gagal generate QR: " + error.message);
-          })
-          .generateQRFromClient(currentCourseId, currentSessionId);
-      }
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
 
-      // Fungsi Hitung Mundur (Timer)
-      function startTimer(seconds) {
-        clearInterval(qrInterval);
-        let timeLeft = seconds;
-        timeLeftSpan.innerText = timeLeft;
+    <header class="relative hero-gradient text-white pt-24 pb-32 px-6 overflow-hidden">
+        <div class="blob -top-20 -left-20"></div>
+        <div class="blob top-40 -right-20 bg-blue-400"></div>
 
-        qrInterval = setInterval(function () {
-          timeLeft--;
-          timeLeftSpan.innerText = timeLeft;
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div
+                class="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-200">
+                Informatics Engineering — UNAIR
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight">
+                Cloud Computing <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-200">Lab Portal</span>
+            </h1>
+            <p class="text-lg md:text-xl text-blue-100/80 max-w-2xl mx-auto font-light">
+                Ekosistem monitoring data real-time berbasis Cloud untuk mahasiswa Teknik Informatika Universitas
+                Airlangga.
+            </p>
+        </div>
 
-          if (timeLeft <= 0) {
-            clearInterval(qrInterval);
-            generateQR();
-          }
-        }, 1000);
-      }
-    }); // end DOMContentLoaded
-  </script>
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-[0]">
+            <svg class="relative block w-full h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    fill="#f8fafc"></path>
+            </svg>
+        </div>
+    </header>
+
+    <main class="flex-grow -mt-20 px-6 relative z-20">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                <a href="modul1.html"
+                    class="group glass-card p-8 rounded-3xl shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div
+                        class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                        <i class="fas fa-qrcode text-white text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-blue-600 tracking-widest uppercase mb-2 block">Modul
+                        01</span>
+                    <h2 class="text-xl font-bold mb-3 text-slate-800">QR Presensi</h2>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-6">Sistem absensi dinamis menggunakan validasi
+                        token real-time berbasis Google Apps Script.</p>
+                    <div class="flex items-center text-blue-600 font-semibold text-sm">
+                        Buka Aplikasi <i
+                            class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+                <a href="gps.html"
+                    class="group glass-card p-8 rounded-3xl shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div
+                        class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-200 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+                        <i class="fas fa-location-dot text-white text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-indigo-600 tracking-widest uppercase mb-2 block">Modul
+                        02</span>
+                    <h2 class="text-xl font-bold mb-3 text-slate-800">GPS Tracker</h2>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-6">Pelacakan lokasi koordinat mahasiswa dengan
+                        integrasi Leaflet Map dan riwayat pergerakan.</p>
+                    <div class="flex items-center text-indigo-600 font-semibold text-sm">
+                        Buka Aplikasi <i
+                            class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+                <a href="accelerometer.html"
+                    class="group glass-card p-8 rounded-3xl shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2">
+                    <div
+                        class="w-16 h-16 bg-cyan-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-200 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-cyan-600 tracking-widest uppercase mb-2 block">Modul
+                        03</span>
+                    <h2 class="text-xl font-bold mb-3 text-slate-800">Telemetri Sensor</h2>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-6">Monitoring data accelerometer (X, Y, Z)
+                        secara langsung dari perangkat ke cloud dashboard.</p>
+                    <div class="flex items-center text-cyan-600 font-semibold text-sm">
+                        Buka Aplikasi <i
+                            class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-12 px-6">
+        <div
+            class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center border-t border-slate-200 pt-8 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-32 h-8 bg-blue-900 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-xs">Cloud Computing</span>
+                </div>
+                <p class="text-sm text-slate-400 font-medium">Kelompok 1 — Teknik Informatika UNAIR</p>
+            </div>
+            <div class="flex gap-6">
+                <a href="https://github.com/nauvaljanuarta/presence"
+                    class="text-slate-400 hover:text-blue-600 transition-colors"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
 </body>
-
 
 </html>
