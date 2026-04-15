@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Presensi - Cloud Computing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white pt-10 pb-20 px-6 text-center shadow-lg">
+    <h1 class="text-3xl font-extrabold mb-2">Dashboard Admin Presensi</h1>
+    <p class="text-blue-200 font-medium"><i class="fas fa-server mr-2"></i>Mata Kuliah: Cloud Computing</p>
+  </header>
+
+  <main class="flex-grow flex justify-center px-4 -mt-12 relative z-10">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 w-full max-w-lg">
+
+      <div class="text-center mb-8">
+        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-sliders text-xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800">Mulai Sesi Baru</h2>
+      </div>
+
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6">
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">ID Mata Kuliah</label>
+          <input type="text" id="input-course" placeholder="Contoh: CC-101"
+            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all">
+        </div>
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">ID Sesi</label>
+          <input type="text" id="input-session" placeholder="Contoh: SES-01"
+            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all">
+        </div>
+
+        <button id="btn-start"
+          class="w-full py-3.5 mt-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/30 transition-all">
+          <i class="fas fa-bolt mr-2"></i> Generate QR Code
+        </button>
+      </div>
+
+      <div id="qr-display-area" class="hidden border-t border-slate-200 pt-6 animate-[fadeIn_0.5s_ease-out]">
+        <p class="text-center text-sm font-medium text-slate-500 mb-4">Arahkan mahasiswa untuk scan QR di bawah ini.</p>
+
+        <div
+          class="flex justify-center items-center bg-blue-50 border-2 border-dashed border-blue-300 rounded-2xl p-6 mx-auto w-fit mb-6">
+          <img src="" alt="QR Code" id="qr-image" class="w-56 h-56 object-contain rounded-lg mix-blend-multiply">
+        </div>
+
+        <div class="bg-red-50 text-red-600 rounded-xl p-4 text-center border border-red-100">
+          <p class="font-bold text-lg"><i class="fas fa-clock mr-2"></i>Berlaku selama: <span id="time-left"
+              class="text-2xl font-black mx-1">30</span> detik</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="py-6 text-center text-slate-400 text-sm font-medium mt-auto">
+    &copy; 2026 Admin Lab Kampus B
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const qrImage = document.getElementById('qr-image');
+      const timeLeftSpan = document.getElementById('time-left');
+      const qrDisplayArea = document.getElementById('qr-display-area');
+      const btnStart = document.getElementById('btn-start');
+      let qrInterval;
+
+      btnStart.addEventListener('click', startSession);
+
+      function startSession() {
+        const courseId = document.getElementById('input-course').value.trim();
+        const sessionId = document.getElementById('input-session').value.trim();
+
+        if (!courseId || !sessionId) { alert("Harap isi ID Mata Kuliah dan ID Sesi terlebih dahulu!"); return; }
+
+        qrDisplayArea.classList.remove('hidden');
+        qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Loading...";
+        btnStart.disabled = true;
+        btnStart.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+        generateQR();
+      }
+
+      function generateQR() {
+        const currentCourseId = document.getElementById('input-course').value.trim();
+        const currentSessionId = document.getElementById('input-session').value.trim();
+
+        // Call ke Google Apps Script
+        google.script.run
+          .withSuccessHandler(function (result) {
+            btnStart.disabled = false;
+            btnStart.innerHTML = '<i class="fas fa-bolt mr-2"></i>Terapkan & Generate QR';
+
+            if (result.ok) {
+              const token = result.data.qr_token;
+              qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + token;
+              startTimer(30);
+            } else {
+              alert("Error: " + result.error);
+            }
+          })
+          .withFailureHandler(function (error) {
+            btnStart.disabled = false;
+            btnStart.innerHTML = '<i class="fas fa-bolt mr-2"></i>Terapkan & Generate QR';
+            alert("Gagal generate QR: " + error.message);
+          })
+          .generateQRFromClient(currentCourseId, currentSessionId);
+      }
+
+      function startTimer(seconds) {
+        clearInterval(qrInterval);
+        let timeLeft = seconds;
+        timeLeftSpan.innerText = timeLeft;
+
+        qrInterval = setInterval(function () {
+          timeLeft--;
+          timeLeftSpan.innerText = timeLeft;
+          if (timeLeft <= 0) { clearInterval(qrInterval); generateQR(); }
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+
+</html>

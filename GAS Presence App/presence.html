@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QR Attendance Scanner | UNAIR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .hero-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+    }
+
+    /* Animasi Scanner & Loading */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    #reader video {
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    #reader {
+      border: none !important;
+    }
+  </style>
+</head>
+
+<body class="hero-bg min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md mx-auto animate-fade-in">
+
+    <div class="text-center mb-6 text-white">
+      <div
+        class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-lg">
+        <i class="fas fa-qrcode text-3xl text-blue-300"></i>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight">QR Attendance</h1>
+      <p class="text-blue-200 text-sm mt-1 font-light">Cloud Computing Lab — Teknik Informatika</p>
+    </div>
+
+    <div class="glass-card rounded-[24px] p-6 md:p-8 shadow-2xl border border-white/40">
+
+      <div class="mb-5">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">User ID (NIM)</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-user text-slate-400"></i>
+          </div>
+          <input type="text" id="user_id" placeholder="Masukkan NIM kamu" autocomplete="off"
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700 font-medium" />
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Device Fingerprint</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-mobile-screen text-slate-400"></i>
+          </div>
+          <input type="text" id="device_id" placeholder="Mendeteksi Device..." autocomplete="off" readonly
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed outline-none font-mono" />
+        </div>
+      </div>
+
+      <button id="btn-scan" onclick="startScan()" disabled
+        class="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all flex justify-center items-center gap-2">
+        <i class="fas fa-spinner fa-spin" id="btn-spinner"></i> Menyiapkan Device...
+      </button>
+
+      <div id="reader-container"
+        class="hidden mt-6 rounded-2xl overflow-hidden border-4 border-blue-100 shadow-inner bg-black">
+        <div id="reader" class="w-full"></div>
+      </div>
+
+      <div id="status" class="hidden mt-5 p-4 rounded-xl text-sm font-semibold text-center leading-relaxed"></div>
+
+    </div>
+
+    <p class="text-center mt-8 text-xs text-blue-200/60 font-medium">
+      &copy; 2026 Modul 02 Presensi Dinamis
+    </p>
+
+  </div>
+
+  <script>
+    const baseUrl = "https://script.google.com/macros/s/AKfycbzwaWQqPtM0bVDoOfTvX6QhOi9cXWulQYVoWKErPQd9cULmjFQDc8jYY1OIeDg9mYqH/exec";
+    let scanner;
+    const btnScan = document.getElementById("btn-scan");
+    const deviceIdInput = document.getElementById("device_id");
+    const readerContainer = document.getElementById("reader-container");
+
+    const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4').then(FingerprintJS => FingerprintJS.load());
+
+    fpPromise
+      .then(fp => fp.get())
+      .then(result => {
+        deviceIdInput.value = result.visitorId;
+        resetButton();
+      })
+      .catch(err => {
+        showStatus("Gagal mendeteksi perangkat. Silakan muat ulang halaman.", "error");
+        deviceIdInput.placeholder = "Gagal mendeteksi";
+      });
+
+    function startScan() {
+      if (!validate()) {
+        showStatus("Lengkapi NIM terlebih dahulu", "error");
+        return;
+      }
+
+      btnScan.disabled = true;
+      btnScan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuka Kamera...';
+      readerContainer.classList.remove("hidden");
+      showStatus("Arahkan kamera ke QR Code di layar utama...", "loading");
+
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async (decodedText) => {
+          await scanner.stop();
+          readerContainer.classList.add("hidden");
+          btnScan.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses...';
+          sendCheckIn(decodedText);
+        }
+      ).catch(function (err) {
+        showStatus("Tidak dapat mengakses kamera. Pastikan izin diberikan.", "error");
+        readerContainer.classList.add("hidden");
+        resetButton();
+      });
+    }
+
+    function validate() { return document.getElementById("user_id").value.trim() && document.getElementById("device_id").value.trim(); }
+
+    function resetButton() {
+      btnScan.disabled = false;
+      btnScan.innerHTML = '<i class="fas fa-camera text-lg"></i> Mulai Scan QR';
+    }
+
+    async function sendCheckIn(token) {
+      showStatus("Mengirim data presensi ke server...", "loading");
+      const data = {
+        user_id: document.getElementById("user_id").value.trim(),
+        device_id: document.getElementById("device_id").value.trim(),
+        qr_token: token,
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        const res = await fetch(baseUrl + "?path=presence/checkin", {
+          method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data),
+        });
+        const result = await res.json();
+
+        if (result.ok) {
+          showStatus(`✅ Presensi Berhasil!<br><span class="text-xs font-normal opacity-80">${result.data.course_id} — Sesi ${result.data.session_id}</span>`, "success");
+        } else {
+          const msgs = { token_invalid: "Token QR tidak valid", token_expired: "Token QR sudah kadaluarsa", already_checked_in: "Kamu sudah presensi di sesi ini", missing_field: "Data tidak lengkap" };
+          showStatus("❌ " + (msgs[result.error] || result.error), "error");
+        }
+      } catch (e) {
+        showStatus("Tidak dapat menghubungi server. Coba lagi.", "error");
+      }
+      resetButton();
+    }
+
+    // Fungsi khusus untuk handle class Tailwind via JavaScript
+    function showStatus(msg, type) {
+      const el = document.getElementById("status");
+      el.innerHTML = msg;
+      el.className = "mt-5 p-4 rounded-xl text-sm font-bold text-center leading-relaxed animate-fade-in block border";
+
+      if (type === 'success') el.classList.add("bg-emerald-50", "text-emerald-700", "border-emerald-200");
+      else if (type === 'error') el.classList.add("bg-red-50", "text-red-700", "border-red-200");
+      else if (type === 'loading') el.classList.add("bg-blue-50", "text-blue-700", "border-blue-200");
+    }
+  </script>
+</body>
+
+</html>
