@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilih Peran - Sistem Presensi | UNAIR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .hero-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        /* Animasi background agar lebih hidup */
+        @keyframes blob {
+            0% {
+                transform: translate(0px, 0px) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+        }
+
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+    </style>
+</head>
+
+<body class="hero-bg min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
+    <div
+        class="absolute top-0 left-0 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+    </div>
+    <div
+        class="absolute top-0 right-0 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+    </div>
+
+    <div class="z-10 w-full max-w-4xl text-center mb-10">
+        <div
+            class="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase bg-white/10 border border-white/20 rounded-full text-blue-200">
+            Modul 02 - Cloud Computing
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">Sistem Presensi Dinamis</h1>
+        <p class="text-blue-200 font-light max-w-lg mx-auto">Silakan pilih portal masuk sesuai dengan peran Anda pada
+            sesi perkuliahan ini.</p>
+    </div>
+
+    <div class="z-10 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+
+        <a href="presence.html"
+            class="group glass-card p-8 rounded-3xl shadow-2xl border border-white/40 hover:-translate-y-2 transition-all duration-300 text-center flex flex-col items-center">
+            <div
+                class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/40 group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-mobile-screen text-white text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Portal Mahasiswa</h2>
+            <p class="text-slate-500 text-sm mb-6 px-4 leading-relaxed">Buka aplikasi scanner QR di perangkat Anda untuk
+                mencatat kehadiran pada sesi yang sedang berlangsung.</p>
+
+            <div
+                class="mt-auto px-6 py-3 bg-blue-50 text-blue-600 font-semibold rounded-xl text-sm group-hover:bg-blue-600 group-hover:text-white transition-colors w-full border border-blue-100 group-hover:border-transparent">
+                Masuk sebagai Mahasiswa
+            </div>
+        </a>
+
+        <a href="qr.html"
+            class="group glass-card p-8 rounded-3xl shadow-2xl border border-white/40 hover:-translate-y-2 transition-all duration-300 text-center flex flex-col items-center">
+            <div
+                class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/40 group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-desktop text-white text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Portal Admin</h2>
+            <p class="text-slate-500 text-sm mb-6 px-4 leading-relaxed">Kelola sesi mata kuliah dan generate QR Code
+                validasi dinamis untuk ditampilkan di proyektor kelas.</p>
+
+            <div
+                class="mt-auto px-6 py-3 bg-indigo-50 text-indigo-600 font-semibold rounded-xl text-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors w-full border border-indigo-100 group-hover:border-transparent">
+                Masuk sebagai Admin
+            </div>
+        </a>
+
+    </div>
+
+    <div class="z-10 mt-12">
+        <a href="index.html"
+            class="flex items-center text-blue-200/70 hover:text-white text-sm font-medium transition-colors">
+            <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mr-3">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            Kembali ke Hub Utama
+        </a>
+    </div>
+
+</body>
+
+</html>
