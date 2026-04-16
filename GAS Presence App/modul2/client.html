@@ -84,8 +84,9 @@
         </a>
     </footer>
 
+    <script src="../config.js"></script>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec";
+        // API_URL sudah didefinisikan oleh config.js
         function logS(msg) { document.getElementById('log-sender').innerHTML = `<div>> ${msg}</div>` + document.getElementById('log-sender').innerHTML; }
 
         const fpPromise = import('https://openfpcdn.io/fingerprintjs/v4').then(fp => fp.load());
