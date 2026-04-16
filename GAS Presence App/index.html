@@ -128,6 +128,46 @@
         </div>
     </main>
 
+    <!-- API Configuration Section -->
+    <section class="px-6 mt-8 mb-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 md:p-8">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center shadow-md">
+                        <i class="fas fa-gear text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">API Configuration</h3>
+                        <p class="text-xs text-slate-400 font-medium">Atur endpoint Google Apps Script Web App</p>
+                    </div>
+                </div>
+
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">API URL
+                    (exec)</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <i class="fas fa-link absolute left-4 top-3.5 text-slate-300 text-sm"></i>
+                        <input type="text" id="input-api-url"
+                            placeholder="https://script.google.com/macros/s/AKfycbwRWRN2Nn3vvDzWNO8IYinc449oZcnyCCC3NJmzqTX0gSnOyFpEzo4Giap3nYEwg39M4g/exec"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-slate-600">
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button id="btn-save-api" onclick="saveApiUrl()"
+                            class="px-5 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:bg-blue-700 hover:shadow-blue-500/40 transition-all active:scale-95">
+                            <i class="fas fa-save mr-1.5"></i> Simpan
+                        </button>
+                        <button id="btn-reset-api" onclick="resetApiUrl()"
+                            class="px-5 py-3 bg-slate-100 text-slate-600 font-bold text-sm rounded-xl hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-all active:scale-95">
+                            <i class="fas fa-rotate-left mr-1.5"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div id="api-status" class="mt-3 text-xs font-semibold hidden rounded-lg px-4 py-2.5"></div>
+            </div>
+        </div>
+    </section>
+
     <footer class="py-12 px-6">
         <div
             class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center border-t border-slate-200 pt-8 gap-4">
@@ -143,6 +183,62 @@
             </div>
         </div>
     </footer>
+
+    <script src="config.js"></script>
+    <script>
+        const apiInput = document.getElementById('input-api-url');
+        const savedUrl = localStorage.getItem("API_URL");
+        if (savedUrl) {
+            apiInput.value = savedUrl;
+            freezeInput();
+        }
+
+        function freezeInput() {
+            apiInput.readOnly = true;
+            apiInput.classList.add("bg-slate-100", "text-slate-400", "cursor-not-allowed");
+            apiInput.classList.remove("bg-slate-50", "focus:border-blue-500", "focus:ring-4", "focus:ring-blue-500/10");
+        }
+
+        function unfreezeInput() {
+            apiInput.readOnly = false;
+            apiInput.classList.remove("bg-slate-100", "text-slate-400", "cursor-not-allowed");
+            apiInput.classList.add("bg-slate-50", "focus:border-blue-500", "focus:ring-4", "focus:ring-blue-500/10");
+        }
+
+        function saveApiUrl() {
+            const input = apiInput.value.trim();
+            if (!input) {
+                localStorage.removeItem("API_URL");
+                showApiStatus("Input kosong — menggunakan API default.", "info");
+                return;
+            }
+            if (!input.startsWith("https://")) {
+                showApiStatus("URL tidak valid. Pastikan diawali dengan https://", "error");
+                return;
+            }
+            localStorage.setItem("API_URL", input);
+            freezeInput();
+            showApiStatus("API URL berhasil disimpan. Berlaku untuk semua modul.", "success");
+        }
+
+        function resetApiUrl() {
+            localStorage.removeItem("API_URL");
+            apiInput.value = "";
+            unfreezeInput();
+            apiInput.focus();
+            showApiStatus("API URL dikembalikan ke default.", "info");
+        }
+
+        function showApiStatus(msg, type) {
+            const el = document.getElementById('api-status');
+            el.textContent = msg;
+            el.className = "mt-3 text-xs font-semibold rounded-lg px-4 py-2.5 block";
+            if (type === "success") el.classList.add("bg-emerald-50", "text-emerald-700", "border", "border-emerald-200");
+            else if (type === "error") el.classList.add("bg-red-50", "text-red-700", "border", "border-red-200");
+            else if (type === "info") el.classList.add("bg-blue-50", "text-blue-700", "border", "border-blue-200");
+            setTimeout(() => { el.classList.add("hidden"); }, 4000);
+        }
+    </script>
 
 </body>
 
